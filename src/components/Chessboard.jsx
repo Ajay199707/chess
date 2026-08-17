@@ -1,0 +1,243 @@
+import React, { useState, useEffect } from 'react';
+import { ChessPieceSVG } from '../utils/chessPieces';
+
+export const Chessboard = ({
+  game,
+  onMove,
+  turn,
+  playerColor, // 'white', 'black', or null (for local/bot mode)
+  boardTheme = 'classic',
+  interactive = true,
+  lastMove = null,
+}) => {
+  const [selectedSquare, setSelectedSquare] = useState(null);
+  const [possibleMoves, setPossibleMoves] = useState([]);
+  const [promotionPending, setPromotionPending] = useState(null); // { from, to }
+
+  // Flip board if player is black
+  const isFlipped = playerColor === 'black';
+
+  // Normalize playerColor: 'white' -> 'w', 'black' -> 'b', null -> null
+  const normalizedPlayerColor = playerColor === 'white' ? 'w' : playerColor === 'black' ? 'b' : null;
+
+  const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
+  const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+  const displayRanks = isFlipped ? [...ranks].reverse() : ranks;
+  const displayFiles = isFlipped ? [...files].reverse() : files;
+
+  // Clear selections when game state changes
+  useEffect(() => {
+    setSelectedSquare(null);
+    setPossibleMoves([]);
+    setPromotionPending(null);
+  }, [game]);
+
+  const getSquareName = (file, rank) => `${file}${rank}`;
+
+  // Find checking King's square if in check
+  const getKingInCheckSquare = () => {
+    if (!game.inCheck()) return null;
+    const activeColor = game.turn();
+    const board = game.board();
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const sq = board[r][c];
+        if (sq && sq.type === 'k' && sq.color === activeColor) {
+          const filesArr = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+          return `${filesArr[c]}${8 - r}`;
+        }
+      }
+    }
+    return null;
+  };
+
+  const kingInCheck = getKingInCheckSquare();
+
+  // Click handler
+  const handleSquareClick = (square) => {
+    if (!interactive) return;
+
+    // If spectator, no interaction
+    if (normalizedPlayerColor && normalizedPlayerColor !== game.turn()) {
+      return;
+    }
+
+    const piece = game.get(square);
+
+    // If a promotion modal is open, force selection there
+    if (promotionPending) return;
+
+    // Case 1: Select own piece
+    if (piece && piece.color === game.turn() && (!normalizedPlayerColor || piece.color === normalizedPlayerColor)) {
+      setSelectedSquare(square);
+      // Find legal moves for this piece
+      const moves = game.moves({ square, verbose: true });
+      setPossibleMoves(moves.map(m => m.to));
+      return;
+    }
+
+    // Case 2: Attempt move to clicked square
+    if (selectedSquare) {
+      if (possibleMoves.includes(square)) {
+        // Check for promotion
+        const movingPiece = game.get(selectedSquare);
+        const isPawn = movingPiece && movingPiece.type === 'p';
+        const isPromotionRank = square.endsWith('8') || square.endsWith('1');
+
+        if (isPawn && isPromotionRank) {
+          setPromotionPending({ from: selectedSquare, to: square });
+        } else {
+          executeMove(selectedSquare, square);
+        }
+      } else {
+        // Reset selections if clicked elsewhere
+        setSelectedSquare(null);
+        setPossibleMoves([]);
+      }
+    }
+  };
+
+  const executeMove = (from, to, promotion = 'q') => {
+    onMove({ from, to, promotion });
+    setSelectedSquare(null);
+    setPossibleMoves([]);
+    setPromotionPending(null);
+  };
+
+  // Drag-and-drop events
+  const handleDragStart = (e, square) => {
+    if (!interactive) return;
+    if (normalizedPlayerColor && normalizedPlayerColor !== game.turn()) {
+      e.preventDefault();
+      return;
+    }
+
+    const piece = game.get(square);
+    if (piece && piece.color === game.turn() && (!normalizedPlayerColor || piece.color === normalizedPlayerColor)) {
+      e.dataTransfer.setData('text/plain', square);
+      setSelectedSquare(square);
+      const moves = game.moves({ square, verbose: true });
+      setPossibleMoves(moves.map(m => m.to));
+    } else {
+      e.preventDefault();
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, targetSquare) => {
+    e.preventDefault();
+    const sourceSquare = e.dataTransfer.getData('text/plain');
+
+    if (sourceSquare && possibleMoves.includes(targetSquare)) {
+      const movingPiece = game.get(sourceSquare);
+      const isPawn = movingPiece && movingPiece.type === 'p';
+      const isPromotionRank = targetSquare.endsWith('8') || targetSquare.endsWith('1');
+
+      if (isPawn && isPromotionRank) {
+        setPromotionPending({ from: sourceSquare, to: targetSquare });
+      } else {
+        executeMove(sourceSquare, targetSquare);
+      }
+    } else {
+      setSelectedSquare(null);
+      setPossibleMoves([]);
+    }
+  };
+
+  return (
+    <div className={`chessboard-wrapper theme-${boardTheme}`}>
+      <div className="chessboard">
+        {displayRanks.map((rank) =>
+          displayFiles.map((file) => {
+            const squareName = getSquareName(file, rank);
+            const piece = game.get(squareName);
+            const isDark = (files.indexOf(file) + ranks.indexOf(rank)) % 2 !== 0;
+            const isSelected = selectedSquare === squareName;
+            const isPossibleDest = possibleMoves.includes(squareName);
+            const isLastSource = lastMove?.from === squareName;
+            const isLastDest = lastMove?.to === squareName;
+            const isKingInCheck = kingInCheck === squareName;
+
+            let squareClass = 'square';
+            if (isDark) squareClass += ' dark';
+            else squareClass += ' light';
+
+            if (isSelected) squareClass += ' selected';
+            if (isLastSource || isLastDest) squareClass += ' last-move';
+            if (isKingInCheck) squareClass += ' king-check';
+
+            return (
+              <div
+                key={squareName}
+                className={squareClass}
+                onClick={() => handleSquareClick(squareName)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, squareName)}
+                style={{ position: 'relative' }}
+              >
+                {/* Piece Rendering */}
+                {piece && (
+                  <div
+                    className={`piece ${normalizedPlayerColor && piece.color !== game.turn() ? 'inert' : 'draggable'}`}
+                    draggable={interactive && (!normalizedPlayerColor || piece.color === normalizedPlayerColor)}
+                    onDragStart={(e) => handleDragStart(e, squareName)}
+                  >
+                    <ChessPieceSVG type={piece.type} color={piece.color} />
+                  </div>
+                )}
+
+                {/* Possible move dot marker */}
+                {isPossibleDest && (
+                  <div className={`move-indicator ${piece ? 'capture' : ''}`} />
+                )}
+
+                {/* Ranks & Files Labels (Only on edge squares) */}
+                {((!isFlipped && file === 'a') || (isFlipped && file === 'h')) && (
+                  <span className="coordinate rank">{rank}</span>
+                )}
+                {((!isFlipped && rank === 1) || (isFlipped && rank === 8)) && (
+                  <span className="coordinate file">{file}</span>
+                )}
+              </div>
+            );
+          })
+        )}
+
+        {/* Custom Pawn Promotion choices overlay */}
+        {promotionPending && (
+          <div className="promotion-overlay">
+            <div className="promotion-menu">
+              <h4>Promote Pawn to:</h4>
+              <div className="promotion-options">
+                {[
+                  { name: 'Queen', key: 'q' },
+                  { name: 'Rook', key: 'r' },
+                  { name: 'Bishop', key: 'b' },
+                  { name: 'Knight', key: 'n' },
+                ].map((option) => (
+                  <button
+                    key={option.key}
+                    className="promo-btn"
+                    onClick={() => executeMove(promotionPending.from, promotionPending.to, option.key)}
+                  >
+                    <div className="promo-piece-wrapper">
+                      <ChessPieceSVG type={option.key} color={game.turn()} />
+                    </div>
+                    <span>{option.name}</span>
+                  </button>
+                ))}
+              </div>
+              <button className="promo-cancel" onClick={() => setPromotionPending(null)}>
+                Cancel Move
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
