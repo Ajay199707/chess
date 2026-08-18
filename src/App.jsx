@@ -355,11 +355,14 @@ export default function App() {
     }
 
     // If we're on a dev server port (e.g. 5173), connect directly to the Express server on port 3001.
-    // Otherwise, connect to the current origin (production server.js serves both).
+    // Otherwise, connect to the custom hosted production backend URL (e.g. on Render).
+    // REPLACE "YOUR_RENDER_BACKEND_URL" below with your live Render URL once hosted!
+    const BACKEND_PROD_URL = "YOUR_RENDER_BACKEND_URL"; 
+
     const isDev = window.location.port && window.location.port !== '3001';
     const socketUrl = isDev 
       ? `${window.location.protocol}//${window.location.hostname}:3001` 
-      : window.location.origin;
+      : (BACKEND_PROD_URL !== "YOUR_RENDER_BACKEND_URL" ? BACKEND_PROD_URL : window.location.origin);
 
     const newSocket = io(socketUrl);
     socketRef.current = newSocket;
