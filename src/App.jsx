@@ -630,7 +630,8 @@ export default function App() {
   };
 
   const handleCopyLink = () => {
-    const shareUrl = `${window.location.origin}/?room=${roomCode}`;
+    const baseUrl = window.location.href.split('?')[0];
+    const shareUrl = `${baseUrl}?room=${roomCode}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopiedLink(true);
       showToast("Shareable link copied!");
