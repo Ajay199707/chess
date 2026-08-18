@@ -357,7 +357,7 @@ export default function App() {
     // If we're on a dev server port (e.g. 5173), connect directly to the Express server on port 3001.
     // Otherwise, connect to the custom hosted production backend URL (e.g. on Render).
     // REPLACE "YOUR_RENDER_BACKEND_URL" below with your live Render URL once hosted!
-    const BACKEND_PROD_URL = "YOUR_RENDER_BACKEND_URL"; 
+    const BACKEND_PROD_URL = "https://chess-smdm.onrender.com"; 
 
     const isDev = window.location.port && window.location.port !== '3001';
     const socketUrl = isDev 

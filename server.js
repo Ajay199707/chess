@@ -21,15 +21,24 @@ const io = new Server(httpServer, {
 
 const PORT = process.env.PORT || 3001;
 
-// Serve static files in production
-app.use(express.static(path.join(__dirname, 'dist')));
-app.use((req, res, next) => {
-  if (req.accepts('html')) {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  } else {
-    next();
-  }
-});
+import fs from 'fs';
+
+// Serve static files in production if dist exists, otherwise serve a simple API status
+const distPath = path.join(__dirname, 'dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.use((req, res, next) => {
+    if (req.accepts('html')) {
+      res.sendFile(path.join(distPath, 'index.html'));
+    } else {
+      next();
+    }
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.json({ status: 'online', service: 'chess-socket-server' });
+  });
+}
 
 // In-memory room store
 // roomId -> RoomObject
