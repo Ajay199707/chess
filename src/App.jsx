@@ -75,6 +75,7 @@ export default function App() {
   const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [rematchRequestSent, setRematchRequestSent] = useState(false);
 
   // References
   const botTimeoutRef = useRef(null);
@@ -484,6 +485,11 @@ export default function App() {
       setGame(newGameInstance);
       setGameStatus(updatedRoomState.gameState.status);
       setWinner(updatedRoomState.gameState.winner);
+      
+      if (updatedRoomState.gameState.status === 'playing') {
+        setRematchRequestSent(false);
+        setRestartOfferPending(null);
+      }
 
       // Sync last move highlight and play opponent move sound cues
       if (updatedRoomState.gameState.lastMove) {
@@ -560,6 +566,7 @@ export default function App() {
     });
 
     newSocket.on('restart_declined', () => {
+      setRematchRequestSent(false);
       showToast("Restart request declined by opponent.");
     });
   };
@@ -689,6 +696,7 @@ export default function App() {
   const handleOfferRestart = () => {
     if (gameMode === 'online-2p' && socket) {
       socket.emit('offer_restart');
+      setRematchRequestSent(true);
       showToast("Restart request sent.");
     } else {
       // Local restart
@@ -701,6 +709,9 @@ export default function App() {
       socket.emit('restart_response', { accept });
     }
     setRestartOfferPending(null);
+    if (!accept) {
+      setRematchRequestSent(false);
+    }
   };
 
   // --- UTILITIES ---
@@ -1314,7 +1325,7 @@ export default function App() {
             <div className="dashboard-column">
               
               {/* Online Game Prompts / Notifications inside dashboard */}
-              {(drawOfferPending || undoRequestPending || restartOfferPending) && (
+              {(drawOfferPending || undoRequestPending) && (
                 <div className="dialog-alert-card animate-slide-up">
                   {drawOfferPending && (
                     <div className="alert-content">
@@ -1334,15 +1345,6 @@ export default function App() {
                       </div>
                     </div>
                   )}
-                  {restartOfferPending && (
-                    <div className="alert-content">
-                      <p>Opponent proposed a Restart.</p>
-                      <div className="btn-actions">
-                        <button className="btn-sm-primary" onClick={() => handleRespondRestart(true)}>Accept</button>
-                        <button className="btn-sm-danger" onClick={() => handleRespondRestart(false)}>Decline</button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -1356,9 +1358,36 @@ export default function App() {
                     {gameStatus === 'timeout' && `Timeout! Winner: ${winner.toUpperCase()}`}
                     {gameStatus === 'abandoned' && `Match ended by abandonment. Winner: ${winner ? winner.toUpperCase() : 'None'}`}
                   </p>
-                  <button className="btn-primary" onClick={handleOfferRestart}>
-                    <RotateCcw size={16} /> Request Rematch
-                  </button>
+                  
+                  {gameMode === 'online-2p' ? (
+                    isSpectator ? (
+                      <p className="spectator-msg">Waiting for players to request rematch...</p>
+                    ) : restartOfferPending ? (
+                      <div className="rematch-proposal-box">
+                        <p className="rematch-proposal-text font-pulse">🤝 Opponent offered a Rematch!</p>
+                        <div className="btn-actions-row">
+                          <button className="btn-primary" onClick={() => handleRespondRestart(true)}>
+                            Accept
+                          </button>
+                          <button className="btn-danger" onClick={() => handleRespondRestart(false)}>
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    ) : rematchRequestSent ? (
+                      <div className="rematch-status-box">
+                        <p className="rematch-status-text font-pulse">⏳ Waiting for opponent to accept...</p>
+                      </div>
+                    ) : (
+                      <button className="btn-primary" onClick={handleOfferRestart}>
+                        <RotateCcw size={16} /> Request Rematch
+                      </button>
+                    )
+                  ) : (
+                    <button className="btn-primary" onClick={handleOfferRestart}>
+                      <RotateCcw size={16} /> Play Again
+                    </button>
+                  )}
                 </div>
               )}
 
