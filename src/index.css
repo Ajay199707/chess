@@ -99,53 +99,6 @@
                     linear-gradient(135deg, rgba(0, 0, 0, 0.08) 0%, transparent 100%);
 }
 
-/* 💎 GLASSMORPHISM THEME */
-.app-root.theme-glass {
-  background: radial-gradient(at 0% 0%, #1e1b4b 0px, transparent 50%), 
-              radial-gradient(at 50% 0%, #311042 0px, transparent 50%), 
-              radial-gradient(at 100% 0%, #1e293b 0px, transparent 50%), 
-              radial-gradient(at 0% 100%, #172554 0px, transparent 50%), 
-              radial-gradient(at 100% 100%, #3b0764 0px, transparent 50%), 
-              #030712;
-  --bg-app: transparent;
-  --bg-surface: rgba(255, 255, 255, 0.05);
-  --bg-surface-elevated: rgba(255, 255, 255, 0.12);
-  --border-color: rgba(255, 255, 255, 0.12);
-  --text-main: #ffffff;
-  --text-muted: rgba(255, 255, 255, 0.65);
-  --color-gold: #00ffcc;
-  --color-gold-hover: #00e1b5;
-  --sq-light: rgba(255, 255, 255, 0.22);
-  --sq-dark: rgba(255, 255, 255, 0.05);
-  --sq-highlight: rgba(0, 255, 204, 0.35);
-}
-
-.app-root.theme-glass .player-card,
-.app-root.theme-glass .menu-card,
-.app-root.theme-glass .online-lobby-panel,
-.app-root.theme-glass .stats-panel,
-.app-root.theme-glass .moves-log-panel,
-.app-root.theme-glass .chat-panel,
-.app-root.theme-glass .dialog-alert-card,
-.app-root.theme-glass .game-over-banner {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  backdrop-filter: blur(18px) saturate(180%);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
-.app-root.theme-glass .square {
-  backdrop-filter: blur(4px);
-}
-
-.app-root.theme-glass .square.light {
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
-}
-
-.app-root.theme-glass .square.dark {
-  background-image: linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, transparent 100%);
-}
-
 /* ⚙️ BRUSHED METAL THEME */
 .app-root.theme-metal {
   --bg-app: radial-gradient(ellipse at center, #242729 0%, #0d0e0f 100%);
@@ -448,9 +401,9 @@ body {
 .select-dropdown {
   width: 100%;
   padding: 0.625rem;
-  background: var(--bg-app);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
+  background: #1c1d26 !important;
+  border: 1px solid #2f3242 !important;
+  color: #e2e8f0 !important;
   border-radius: var(--border-radius-sm);
   outline: none;
   font-size: 0.875rem;
@@ -1658,6 +1611,10 @@ body {
 
 /* --- MOBILE RESPONSIVENESS AND LAYOUT CHANGES --- */
 @media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+
   .menu-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -2032,6 +1989,12 @@ body {
   color: var(--color-gold);
   text-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
   font-family: var(--font-mono);
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 12px;
+  }
 }
 
 

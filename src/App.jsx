@@ -1068,7 +1068,6 @@ export default function App() {
                 >
                   <option value="classic">🌲 Birch Wood</option>
                   <option value="wood">🪵 Walnut Wood</option>
-                  <option value="glass">💎 Glassmorphism</option>
                   <option value="metal">⚙️ Brushed Metal</option>
                   <option value="slate">🪙 Modern Slate</option>
                   <option value="gold">✨ Midnight Gold</option>
