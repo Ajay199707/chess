@@ -17,7 +17,8 @@ import { playSound } from './utils/audio';
 const DEFAULT_STATS = {
   vsBot: { easy: { wins: 0, losses: 0, draws: 0 }, medium: { wins: 0, losses: 0, draws: 0 }, hard: { wins: 0, losses: 0, draws: 0 } },
   local: { p1Wins: 0, p2Wins: 0, draws: 0 },
-  online: { wins: 0, losses: 0, draws: 0 }
+  online: { wins: 0, losses: 0, draws: 0 },
+  elo: 1200
 };
 
 export default function App() {
@@ -41,7 +42,12 @@ export default function App() {
   const [stats, setStats] = useState(() => {
     try {
       const saved = localStorage.getItem('chess_player_stats');
-      return saved ? JSON.parse(saved) : DEFAULT_STATS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.elo === undefined) parsed.elo = 1200;
+        return parsed;
+      }
+      return DEFAULT_STATS;
     } catch {
       return DEFAULT_STATS;
     }
@@ -74,12 +80,18 @@ export default function App() {
   const botTimeoutRef = useRef(null);
   const socketRef = useRef(null);
 
-  // Cleanup socket on unmount
+  // Cleanup socket on unmount & load confetti script
   useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js";
+    script.async = true;
+    document.body.appendChild(script);
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
+      document.body.removeChild(script);
     };
   }, []);
 
@@ -149,11 +161,35 @@ export default function App() {
     };
   }, [gameStatus, gameMode, timeControl, game]);
 
+  const triggerHapticFeedback = (type) => {
+    if (navigator.vibrate) {
+      if (type === 'capture') {
+        navigator.vibrate(30);
+      } else if (type === 'check') {
+        navigator.vibrate([60, 40, 60]);
+      } else if (type === 'gameover') {
+        navigator.vibrate([150, 50, 150]);
+      } else if (type === 'move') {
+        navigator.vibrate(10);
+      }
+    }
+  };
+
+  const triggerConfettiCelebration = () => {
+    if (window.confetti) {
+      window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      setTimeout(() => {
+        window.confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+      }, 250);
+    }
+  };
+
   // Sound triggering safely
   const triggerSound = (type) => {
     if (soundEnabled) {
       playSound(type);
     }
+    triggerHapticFeedback(type);
   };
 
   // Helper to show temporary system toast alerts
@@ -204,23 +240,38 @@ export default function App() {
     }
   };
 
-  // Score updater logic
+  // Score updater logic with Elo calculation
   const updateScores = (gameWinner, finishReason) => {
     if (isSpectator) return;
 
     setStats(prev => {
       const nextStats = JSON.parse(JSON.stringify(prev));
+      if (nextStats.elo === undefined) nextStats.elo = 1200;
+      
+      const currentElo = nextStats.elo;
+      let eloChange = 0;
 
       if (gameMode === 'vs-bot') {
         const diffKey = difficulty; // 'easy', 'medium', 'hard'
+        const botRatings = { easy: 1000, medium: 1400, hard: 1800 };
+        const opponentRating = botRatings[diffKey];
+        
+        const expectedScore = 1 / (1 + Math.pow(10, (opponentRating - currentElo) / 400));
+        let actualScore = 0.5; // draw
+        if (gameWinner !== 'draw') {
+          const playerIsWhite = botColor === 'black' || (botColor === 'random' && playerColor === 'white');
+          const isPlayerWinner = (gameWinner === 'white' && playerIsWhite) || (gameWinner === 'black' && !playerIsWhite);
+          actualScore = isPlayerWinner ? 1 : 0;
+          if (isPlayerWinner) triggerConfettiCelebration();
+        }
+
+        eloChange = Math.round(32 * (actualScore - expectedScore));
+
         if (gameWinner === 'draw') {
           nextStats.vsBot[diffKey].draws++;
         } else {
-          // Verify if player color matches winner
-          // For Bot mode, user is white by default unless botColor was forced white
           const playerIsWhite = botColor === 'black' || (botColor === 'random' && playerColor === 'white');
           const isPlayerWinner = (gameWinner === 'white' && playerIsWhite) || (gameWinner === 'black' && !playerIsWhite);
-          
           if (isPlayerWinner) {
             nextStats.vsBot[diffKey].wins++;
           } else {
@@ -230,12 +281,23 @@ export default function App() {
       } else if (gameMode === 'local-2p') {
         if (gameWinner === 'draw') {
           nextStats.local.draws++;
-        } else if (gameWinner === 'white') {
-          nextStats.local.p1Wins++;
         } else {
-          nextStats.local.p2Wins++;
+          triggerConfettiCelebration();
+          if (gameWinner === 'white') {
+            nextStats.local.p1Wins++;
+          } else {
+            nextStats.local.p2Wins++;
+          }
         }
       } else if (gameMode === 'online-2p') {
+        let actualScore = 0.5;
+        if (gameWinner !== 'draw') {
+          const isPlayerWinner = gameWinner === playerColor;
+          actualScore = isPlayerWinner ? 1 : 0;
+          if (isPlayerWinner) triggerConfettiCelebration();
+        }
+        eloChange = Math.round(32 * (actualScore - 0.5));
+
         if (gameWinner === 'draw') {
           nextStats.online.draws++;
         } else {
@@ -246,6 +308,14 @@ export default function App() {
             nextStats.online.losses++;
           }
         }
+      }
+
+      nextStats.elo = Math.max(100, currentElo + eloChange);
+      
+      if (eloChange > 0) {
+        showToast(`🏆 Rating updated: ${nextStats.elo} (+${eloChange})`);
+      } else if (eloChange < 0) {
+        showToast(`📉 Rating updated: ${nextStats.elo} (${eloChange})`);
       }
 
       return nextStats;
@@ -1184,10 +1254,10 @@ export default function App() {
                       <span className="avatar">👤</span>
                       <div className="name-section">
                         <span className="player-name">
-                          {gameMode === 'vs-bot' && playerName}
+                          {gameMode === 'vs-bot' && `${playerName} (${stats.elo || 1200})`}
                           {gameMode === 'local-2p' && "Player 1 (White)"}
                           {gameMode === 'online-2p' && (
-                            isSpectator ? `${playerName} (Spectator)` : `${playerName} (You)`
+                            isSpectator ? `${playerName} (Spectator)` : `${playerName} (${stats.elo || 1200})`
                           )}
                         </span>
                       </div>
@@ -1364,6 +1434,11 @@ export default function App() {
                   <div className="panel-header">
                     <Trophy size={18} className="text-gold" />
                     <h3>🏆 Statistics & Standings</h3>
+                  </div>
+
+                  <div className="stats-section current-elo-banner">
+                    <h4>Current ELO Rating</h4>
+                    <span className="elo-score-val">{stats.elo || 1200}</span>
                   </div>
 
                   <div className="stats-section">
