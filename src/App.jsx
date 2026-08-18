@@ -231,7 +231,9 @@ export default function App() {
           const move = getBestMove(newGame, selectedDiff);
           if (move) {
             newGame.move(move);
-            setGame(new Chess(newGame.fen()));
+            const finalGame = new Chess();
+            finalGame.loadPgn(newGame.pgn());
+            setGame(finalGame);
             setLastMove({ from: move.from, to: move.to });
             triggerSound('move');
           }
@@ -325,7 +327,8 @@ export default function App() {
   // --- GAME MOVE HANDLER (CLIENT SIDE - LOCAL / VS BOT) ---
   const handleLocalMove = (moveDetails) => {
     try {
-      const newGame = new Chess(game.fen());
+      const newGame = new Chess();
+      newGame.loadPgn(game.pgn());
       const isCapture = newGame.get(moveDetails.to) !== null || (moveDetails.promotion && newGame.get(moveDetails.from)?.type === 'p');
       const result = newGame.move(moveDetails);
 
@@ -355,7 +358,9 @@ export default function App() {
             if (botMove) {
               const isBotCapture = newGame.get(botMove.to) !== null;
               newGame.move(botMove);
-              setGame(new Chess(newGame.fen()));
+              const botFinishedGame = new Chess();
+              botFinishedGame.loadPgn(newGame.pgn());
+              setGame(botFinishedGame);
               setLastMove({ from: botMove.from, to: botMove.to });
 
               const isBotCheck = newGame.inCheck();
@@ -464,7 +469,18 @@ export default function App() {
     newSocket.on('room_update', (updatedRoomState) => {
       setRoomState(updatedRoomState);
       
-      const newGameInstance = new Chess(updatedRoomState.gameState.fen);
+      const newGameInstance = new Chess();
+      if (updatedRoomState.gameState.history && Array.isArray(updatedRoomState.gameState.history)) {
+        for (const m of updatedRoomState.gameState.history) {
+          try {
+            newGameInstance.move(m);
+          } catch (err) {
+            console.error("Failed to replay move in history:", m, err);
+          }
+        }
+      } else {
+        newGameInstance.load(updatedRoomState.gameState.fen);
+      }
       setGame(newGameInstance);
       setGameStatus(updatedRoomState.gameState.status);
       setWinner(updatedRoomState.gameState.winner);
@@ -552,7 +568,8 @@ export default function App() {
     if (!socket || isSpectator || gameStatus !== 'playing') return;
 
     try {
-      const tempGame = new Chess(game.fen());
+      const tempGame = new Chess();
+      tempGame.loadPgn(game.pgn());
       const isCapture = tempGame.get(moveDetails.to) !== null;
       const result = tempGame.move(moveDetails);
 
@@ -630,7 +647,8 @@ export default function App() {
       // Local undo
       // Undo user move AND bot move (in vs bot) OR just 1 move (in local-2p)
       const undoSteps = gameMode === 'vs-bot' ? 2 : 1;
-      const tempGame = new Chess(game.fen());
+      const tempGame = new Chess();
+      tempGame.loadPgn(game.pgn());
       
       let undone = 0;
       for (let i = 0; i < undoSteps; i++) {
@@ -655,7 +673,8 @@ export default function App() {
   const handleRespondUndo = (accept) => {
     if (socket && accept) {
       // Pop last two moves locally and share FEN
-      const tempGame = new Chess(game.fen());
+      const tempGame = new Chess();
+      tempGame.loadPgn(game.pgn());
       tempGame.undo(); // opponent's move
       tempGame.undo(); // self move
       
@@ -799,7 +818,8 @@ export default function App() {
     if (!socket) return;
     
     const handleUndoAccept = ({ steps }) => {
-      const tempGame = new Chess(game.fen());
+      const tempGame = new Chess();
+      tempGame.loadPgn(game.pgn());
       for (let i = 0; i < steps; i++) {
         tempGame.undo();
       }
