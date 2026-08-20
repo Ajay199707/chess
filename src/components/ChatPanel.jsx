@@ -104,6 +104,7 @@ export const ChatPanel = ({ socket, roomCode, playerName, chatHistory = [], setC
           className="emoji-toggle-btn"
           onClick={() => setShowEmojiMenu(!showEmojiMenu)}
           title="Toggle emoji list"
+          aria-label="Toggle emoji list"
         >
           <Smile size={20} />
         </button>
@@ -115,6 +116,7 @@ export const ChatPanel = ({ socket, roomCode, playerName, chatHistory = [], setC
                 key={emoji}
                 className="dropdown-emoji-item"
                 onClick={() => sendMessage(emoji, true)}
+                aria-label={`Send ${emoji} emoji`}
               >
                 {emoji}
               </button>
@@ -129,12 +131,15 @@ export const ChatPanel = ({ socket, roomCode, playerName, chatHistory = [], setC
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyPress}
           maxLength={100}
+          aria-label="Chat message"
         />
         
         <button 
           className="send-message-btn" 
           onClick={() => sendMessage(message)}
           disabled={!message.trim()}
+          aria-label="Send message"
+          title="Send message"
         >
           <Send size={16} />
         </button>

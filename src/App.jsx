@@ -995,6 +995,7 @@ export default function App() {
                     value={timeControl} 
                     onChange={(e) => setTimeControl(e.target.value)}
                     className="select-dropdown"
+                    aria-label="Select match time control"
                   >
                     <option value="casual">Casual (No Timer)</option>
                     <option value="bullet">Bullet (1 Min)</option>
@@ -1092,7 +1093,7 @@ export default function App() {
                   <div className="code-badge-group">
                     <span className="room-label">ROOM:</span>
                     <strong className="code">{roomCode}</strong>
-                    <button className="copy-link-btn" onClick={handleCopyLink} title="Copy invitation link">
+                    <button className="copy-link-btn" onClick={handleCopyLink} title="Copy invitation link" aria-label="Copy invitation link">
                       {copiedLink ? <Check size={14} className="text-emerald" /> : <Copy size={14} />}
                     </button>
                   </div>
@@ -1104,6 +1105,7 @@ export default function App() {
                   value={boardTheme} 
                   onChange={(e) => setBoardTheme(e.target.value)}
                   className="theme-select select-dropdown"
+                  aria-label="Select board theme"
                 >
                   <option value="classic">🌲 Birch Wood</option>
                   <option value="wood">🪵 Walnut Wood</option>
@@ -1117,6 +1119,7 @@ export default function App() {
                   className="icon-only-btn" 
                   onClick={() => setIsGuidelinesOpen(true)}
                   title="Rules & Guidelines"
+                  aria-label="Rules and Guidelines"
                 >
                   <HelpCircle size={20} />
                 </button>
@@ -1128,6 +1131,7 @@ export default function App() {
                     triggerSound('move');
                   }}
                   title="Toggle Sound"
+                  aria-label="Toggle Sound"
                 >
                   {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
                 </button>
