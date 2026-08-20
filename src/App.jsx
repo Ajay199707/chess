@@ -1474,7 +1474,7 @@ export default function App() {
             {/* Column 3 (Right): Actions & Chat */}
             <div className="right-column">
               {/* Online Game Prompts / Notifications inside dashboard */}
-              {(drawOfferPending || undoRequestPending) && (
+              {(drawOfferPending || undoRequestPending || (restartOfferPending && gameStatus === 'playing')) && (
                 <div className="dialog-alert-card animate-slide-up">
                   {drawOfferPending && (
                     <div className="alert-content">
@@ -1491,6 +1491,15 @@ export default function App() {
                       <div className="btn-actions">
                         <button className="btn-sm-primary" onClick={() => handleRespondUndo(true)}>Accept</button>
                         <button className="btn-sm-danger" onClick={() => handleRespondUndo(false)}>Decline</button>
+                      </div>
+                    </div>
+                  )}
+                  {restartOfferPending && gameStatus === 'playing' && (
+                    <div className="alert-content">
+                      <p>Opponent requested to Restart the match.</p>
+                      <div className="btn-actions">
+                        <button className="btn-sm-primary" onClick={() => handleRespondRestart(true)}>Accept</button>
+                        <button className="btn-sm-danger" onClick={() => handleRespondRestart(false)}>Decline</button>
                       </div>
                     </div>
                   )}
@@ -1569,9 +1578,9 @@ export default function App() {
                 <button 
                   className="action-tile restart" 
                   onClick={handleOfferRestart}
-                  disabled={isSpectator}
+                  disabled={isSpectator || rematchRequestSent}
                 >
-                  🔄 Restart Match
+                  {rematchRequestSent ? "⏳ Waiting for Restart..." : "🔄 Restart Match"}
                 </button>
               </div>
 
