@@ -706,13 +706,12 @@ export default function App() {
 
   const handleRespondUndo = (accept) => {
     if (socket && accept) {
-      // Pop last two moves locally and share FEN
+      // Pop last move locally and share FEN
       const tempGame = new Chess();
       tempGame.loadPgn(game.pgn());
-      tempGame.undo(); // opponent's move
-      tempGame.undo(); // self move
+      tempGame.undo(); // undo requester's last move
       
-      socket.emit('undo_response', { accept: true, steps: 2 });
+      socket.emit('undo_response', { accept: true, steps: 1 });
       socket.emit('sync_game', { fen: tempGame.fen(), history: tempGame.history() });
     } else if (socket) {
       socket.emit('undo_response', { accept: false });
@@ -1570,7 +1569,12 @@ export default function App() {
                 <button 
                   className="action-tile undo" 
                   onClick={handleRequestUndo}
-                  disabled={gameStatus !== 'playing' || isSpectator || game.history().length === 0}
+                  disabled={
+                    gameStatus !== 'playing' || 
+                    isSpectator || 
+                    (gameMode === 'online-2p' && activeTurn === (playerColor === 'white' ? 'w' : 'b')) || 
+                    game.history().length === 0
+                  }
                 >
                   ↩️ Request Undo
                 </button>
