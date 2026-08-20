@@ -1348,126 +1348,8 @@ export default function App() {
               )}
             </div>
 
-            {/* Dashboard / Sidebar column (desktop static, mobile tab-toggled) */}
-            <div className="dashboard-column">
-              
-              {/* Online Game Prompts / Notifications inside dashboard */}
-              {(drawOfferPending || undoRequestPending) && (
-                <div className="dialog-alert-card animate-slide-up">
-                  {drawOfferPending && (
-                    <div className="alert-content">
-                      <p>Opponent offered a Draw.</p>
-                      <div className="btn-actions">
-                        <button className="btn-sm-primary" onClick={() => handleRespondDraw(true)}>Accept</button>
-                        <button className="btn-sm-danger" onClick={() => handleRespondDraw(false)}>Decline</button>
-                      </div>
-                    </div>
-                  )}
-                  {undoRequestPending && (
-                    <div className="alert-content">
-                      <p>Opponent requests an Undo.</p>
-                      <div className="btn-actions">
-                        <button className="btn-sm-primary" onClick={() => handleRespondUndo(true)}>Accept</button>
-                        <button className="btn-sm-danger" onClick={() => handleRespondUndo(false)}>Decline</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Game Over Panel Overlay */}
-              {gameStatus !== 'playing' && gameStatus !== 'waiting' && (
-                <div className="game-over-banner">
-                  <h2>Game Over!</h2>
-                  <p className="game-reason">
-                    {gameStatus === 'checkmate' && `Checkmate! Winner: ${winner ? winner.toUpperCase() : 'Draw'}`}
-                    {gameStatus === 'draw' && 'Draw by agreement / stalemate / repetition'}
-                    {gameStatus === 'timeout' && `Timeout! Winner: ${winner.toUpperCase()}`}
-                    {gameStatus === 'abandoned' && `Match ended by abandonment. Winner: ${winner ? winner.toUpperCase() : 'None'}`}
-                  </p>
-                  
-                  {gameMode === 'online-2p' ? (
-                    isSpectator ? (
-                      <p className="spectator-msg">Waiting for players to request rematch...</p>
-                    ) : restartOfferPending ? (
-                      <div className="rematch-proposal-box">
-                        <p className="rematch-proposal-text font-pulse">🤝 Opponent offered a Rematch!</p>
-                        <div className="btn-actions-row">
-                          <button className="btn-primary" onClick={() => handleRespondRestart(true)}>
-                            Accept
-                          </button>
-                          <button className="btn-danger" onClick={() => handleRespondRestart(false)}>
-                            Decline
-                          </button>
-                        </div>
-                      </div>
-                    ) : rematchRequestSent ? (
-                      <div className="rematch-status-box">
-                        <p className="rematch-status-text font-pulse">⏳ Waiting for opponent to accept...</p>
-                      </div>
-                    ) : (
-                      <button className="btn-primary" onClick={handleOfferRestart}>
-                        <RotateCcw size={16} /> Request Rematch
-                      </button>
-                    )
-                  ) : (
-                    <button className="btn-primary" onClick={handleOfferRestart}>
-                      <RotateCcw size={16} /> Play Again
-                    </button>
-                  )}
-                </div>
-              )}
-
-
-
-              {/* Action Buttons Panel */}
-              <div className={`control-actions-panel ${activeTab === 'game' ? 'mobile-visible' : 'mobile-hidden'}`}>
-                <button 
-                  className="action-tile resign" 
-                  onClick={handleResign}
-                  disabled={gameStatus !== 'playing' || isSpectator}
-                >
-                  🏳️ Resign Match
-                </button>
-                
-                <button 
-                  className="action-tile draw" 
-                  onClick={handleOfferDraw}
-                  disabled={gameStatus !== 'playing' || isSpectator}
-                >
-                  🤝 Offer Draw
-                </button>
-
-                <button 
-                  className="action-tile undo" 
-                  onClick={handleRequestUndo}
-                  disabled={gameStatus !== 'playing' || isSpectator || game.history().length === 0}
-                >
-                  ↩️ Request Undo
-                </button>
-
-                <button 
-                  className="action-tile restart" 
-                  onClick={handleOfferRestart}
-                  disabled={isSpectator}
-                >
-                  🔄 Restart Match
-                </button>
-              </div>
-
-              {/* Tab: Chat Panel (online mode only) */}
-              {gameMode === 'online-2p' && (
-                <div className={`dashboard-tab-pane ${activeTab === 'chat' ? 'active mobile-visible' : 'mobile-hidden'}`}>
-                  <ChatPanel
-                    socket={socket}
-                    roomCode={roomCode}
-                    playerName={playerName}
-                    chatHistory={chatHistory}
-                    setChatHistory={setChatHistory}
-                  />
-                </div>
-              )}
-
+            {/* Column 1 (Left): Moves & Stats */}
+            <div className="left-column">
               {/* Tab: Move Log List */}
               <div className={`dashboard-tab-pane ${activeTab === 'moves' ? 'active mobile-visible' : 'mobile-hidden'}`}>
                 <div className="moves-log-panel">
@@ -1564,7 +1446,124 @@ export default function App() {
                   </button>
                 </div>
               </div>
+            </div>
 
+            {/* Column 3 (Right): Actions & Chat */}
+            <div className="right-column">
+              {/* Online Game Prompts / Notifications inside dashboard */}
+              {(drawOfferPending || undoRequestPending) && (
+                <div className="dialog-alert-card animate-slide-up">
+                  {drawOfferPending && (
+                    <div className="alert-content">
+                      <p>Opponent offered a Draw.</p>
+                      <div className="btn-actions">
+                        <button className="btn-sm-primary" onClick={() => handleRespondDraw(true)}>Accept</button>
+                        <button className="btn-sm-danger" onClick={() => handleRespondDraw(false)}>Decline</button>
+                      </div>
+                    </div>
+                  )}
+                  {undoRequestPending && (
+                    <div className="alert-content">
+                      <p>Opponent requests an Undo.</p>
+                      <div className="btn-actions">
+                        <button className="btn-sm-primary" onClick={() => handleRespondUndo(true)}>Accept</button>
+                        <button className="btn-sm-danger" onClick={() => handleRespondUndo(false)}>Decline</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Game Over Panel Overlay */}
+              {gameStatus !== 'playing' && gameStatus !== 'waiting' && (
+                <div className="game-over-banner">
+                  <h2>Game Over!</h2>
+                  <p className="game-reason">
+                    {gameStatus === 'checkmate' && `Checkmate! Winner: ${winner ? winner.toUpperCase() : 'Draw'}`}
+                    {gameStatus === 'draw' && 'Draw by agreement / stalemate / repetition'}
+                    {gameStatus === 'timeout' && `Timeout! Winner: ${winner.toUpperCase()}`}
+                    {gameStatus === 'abandoned' && `Match ended by abandonment. Winner: ${winner ? winner.toUpperCase() : 'None'}`}
+                  </p>
+                  
+                  {gameMode === 'online-2p' ? (
+                    isSpectator ? (
+                      <p className="spectator-msg">Waiting for players to request rematch...</p>
+                    ) : restartOfferPending ? (
+                      <div className="rematch-proposal-box">
+                        <p className="rematch-proposal-text font-pulse">🤝 Opponent offered a Rematch!</p>
+                        <div className="btn-actions-row">
+                          <button className="btn-primary" onClick={() => handleRespondRestart(true)}>
+                            Accept
+                          </button>
+                          <button className="btn-danger" onClick={() => handleRespondRestart(false)}>
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    ) : rematchRequestSent ? (
+                      <div className="rematch-status-box">
+                        <p className="rematch-status-text font-pulse">⏳ Waiting for opponent to accept...</p>
+                      </div>
+                    ) : (
+                      <button className="btn-primary" onClick={handleOfferRestart}>
+                        <RotateCcw size={16} /> Request Rematch
+                      </button>
+                    )
+                  ) : (
+                    <button className="btn-primary" onClick={handleOfferRestart}>
+                      <RotateCcw size={16} /> Play Again
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Action Buttons Panel */}
+              <div className={`control-actions-panel ${activeTab === 'game' ? 'mobile-visible' : 'mobile-hidden'}`}>
+                <button 
+                  className="action-tile resign" 
+                  onClick={handleResign}
+                  disabled={gameStatus !== 'playing' || isSpectator}
+                >
+                  🏳️ Resign Match
+                </button>
+                
+                <button 
+                  className="action-tile draw" 
+                  onClick={handleOfferDraw}
+                  disabled={gameStatus !== 'playing' || isSpectator}
+                >
+                  🤝 Offer Draw
+                </button>
+
+                <button 
+                  className="action-tile undo" 
+                  onClick={handleRequestUndo}
+                  disabled={gameStatus !== 'playing' || isSpectator || game.history().length === 0}
+                >
+                  ↩️ Request Undo
+                </button>
+
+                <button 
+                  className="action-tile restart" 
+                  onClick={handleOfferRestart}
+                  disabled={isSpectator}
+                >
+                  🔄 Restart Match
+                </button>
+              </div>
+
+              {/* Tab: Chat Panel (online mode only) */}
+              {gameMode === 'online-2p' && (
+                <div className={`dashboard-tab-pane ${activeTab === 'chat' ? 'active mobile-visible' : 'mobile-hidden'}`}>
+                  <ChatPanel
+                    socket={socket}
+                    roomCode={roomCode}
+                    playerName={playerName}
+                    chatHistory={chatHistory}
+                    setChatHistory={setChatHistory}
+                  />
+                </div>
+              )}
             </div>
 
           </div>
