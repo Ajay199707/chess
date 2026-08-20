@@ -13,6 +13,25 @@ import { Guidelines } from './components/Guidelines';
 import { getBestMove } from './utils/chessAI';
 import { playSound } from './utils/audio';
 
+// Safe localStorage wrapper to prevent crashes in private modes or headless crawlers (Lighthouse/PageSpeed)
+const safeGetItem = (key, defaultValue) => {
+  try {
+    const item = window.localStorage.getItem(key);
+    return item !== null ? item : defaultValue;
+  } catch (e) {
+    console.warn(`Failed to read ${key} from localStorage:`, e);
+    return defaultValue;
+  }
+};
+
+const safeSetItem = (key, value) => {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn(`Failed to write ${key} to localStorage:`, e);
+  }
+};
+
 // Default stats layout
 const DEFAULT_STATS = {
   vsBot: { easy: { wins: 0, losses: 0, draws: 0 }, medium: { wins: 0, losses: 0, draws: 0 }, hard: { wins: 0, losses: 0, draws: 0 } },
@@ -23,11 +42,11 @@ const DEFAULT_STATS = {
 
 export default function App() {
   // --- UI & CONFIG STATE ---
-  const [playerName, setPlayerName] = useState(() => localStorage.getItem('chess_player_name') || 'Grandmaster');
+  const [playerName, setPlayerName] = useState(() => safeGetItem('chess_player_name', 'Grandmaster'));
   const [gameMode, setGameMode] = useState('menu'); // 'menu', 'vs-bot', 'local-2p', 'online-2p'
   const [difficulty, setDifficulty] = useState('medium'); // 'easy', 'medium', 'hard'
   const [botColor, setBotColor] = useState('black'); // 'white', 'black', 'random'
-  const [boardTheme, setBoardTheme] = useState(() => localStorage.getItem('chess_board_theme') || 'classic');
+  const [boardTheme, setBoardTheme] = useState(() => safeGetItem('chess_board_theme', 'classic'));
   const [timeControl, setTimeControl] = useState('casual'); // 'casual', 'bullet', 'blitz3', 'blitz5', 'rapid10'
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState('game'); // 'game', 'chat', 'moves', 'stats'
@@ -41,7 +60,7 @@ export default function App() {
   // Custom stats
   const [stats, setStats] = useState(() => {
     try {
-      const saved = localStorage.getItem('chess_player_stats');
+      const saved = safeGetItem('chess_player_stats', null);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.elo === undefined) parsed.elo = 1200;
@@ -98,16 +117,16 @@ export default function App() {
 
   // Save Player Name & Theme
   useEffect(() => {
-    localStorage.setItem('chess_player_name', playerName);
+    safeSetItem('chess_player_name', playerName);
   }, [playerName]);
 
   useEffect(() => {
-    localStorage.setItem('chess_board_theme', boardTheme);
+    safeSetItem('chess_board_theme', boardTheme);
   }, [boardTheme]);
 
   // Save Stats
   useEffect(() => {
-    localStorage.setItem('chess_player_stats', JSON.stringify(stats));
+    safeSetItem('chess_player_stats', JSON.stringify(stats));
   }, [stats]);
 
   // Handle URL share code join automatically
