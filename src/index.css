@@ -2145,13 +2145,16 @@ body {
     grid-row: 2;
   }
   .left-column .dashboard-tab-pane,
-  .right-column .dashboard-tab-pane,
-  .right-column .control-actions-panel {
-    display: flex !important;
+  .right-column .dashboard-tab-pane {
+    display: block !important;
     opacity: 1 !important;
     transform: none !important;
+    width: 100%;
   }
   .right-column .control-actions-panel {
     display: grid !important;
+    opacity: 1 !important;
+    transform: none !important;
+    width: 100%;
   }
 }
