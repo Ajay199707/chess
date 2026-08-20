@@ -50,6 +50,7 @@ export default function App() {
   const [timeControl, setTimeControl] = useState('casual'); // 'casual', 'bullet', 'blitz3', 'blitz5', 'rapid10'
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(() => safeGetItem('chess_dark_mode', 'true') === 'true');
+  const [isCapturesOpen, setIsCapturesOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('game'); // 'game', 'chat', 'moves', 'stats'
 
   // --- GAME & LOGIC STATE ---
@@ -100,6 +101,7 @@ export default function App() {
   // References
   const botTimeoutRef = useRef(null);
   const socketRef = useRef(null);
+  const capturesRef = useRef(null);
 
   // Cleanup socket on unmount & load confetti script
   useEffect(() => {
@@ -140,6 +142,21 @@ export default function App() {
       document.body.classList.remove('mode-dark');
     }
   }, [isDarkMode]);
+
+  // Click outside handler for captures popover
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (capturesRef.current && !capturesRef.current.contains(e.target)) {
+        setIsCapturesOpen(false);
+      }
+    };
+    if (isCapturesOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isCapturesOpen]);
 
   // Handle URL share code join automatically
   useEffect(() => {
@@ -1332,15 +1349,80 @@ export default function App() {
                   </div>
 
                   {/* Interactive Chessboard */}
-                  <Chessboard
-                    game={game}
-                    onMove={gameMode === 'online-2p' ? handleOnlineMove : handleLocalMove}
-                    turn={activeTurn}
-                    playerColor={gameMode === 'online-2p' ? playerColor : null}
-                    boardTheme={boardTheme}
-                    interactive={gameStatus === 'playing' && !isSpectator}
-                    lastMove={lastMove}
-                  />
+                  <div className="chessboard-wrapper-container">
+                    <Chessboard
+                      game={game}
+                      onMove={gameMode === 'online-2p' ? handleOnlineMove : handleLocalMove}
+                      turn={activeTurn}
+                      playerColor={gameMode === 'online-2p' ? playerColor : null}
+                      boardTheme={boardTheme}
+                      interactive={gameStatus === 'playing' && !isSpectator}
+                      lastMove={lastMove}
+                    />
+
+                    {/* Floating Captured Pieces (Coins) Toggler */}
+                    {gameStatus === 'playing' && (
+                      <div className="floating-captures-container" ref={capturesRef}>
+                        <button 
+                          className={`floating-captures-trigger ${isCapturesOpen ? 'active' : ''}`}
+                          onClick={() => setIsCapturesOpen(!isCapturesOpen)}
+                          title="View Captured Pieces"
+                          aria-label="View Captured Pieces"
+                        >
+                          🪙 <span className="captured-badge-count">{capturedPieces[playerColor === 'black' ? 'w' : 'b'].length}</span>
+                        </button>
+
+                        {isCapturesOpen && (
+                          <div className="floating-captures-popover animate-fade-in">
+                            <div className="popover-header">
+                              <h4>Captured Coins</h4>
+                              <span className="material-advantage-badge">
+                                {materialBalance.whiteLead 
+                                  ? `White ${materialBalance.whiteLead}` 
+                                  : materialBalance.blackLead 
+                                    ? `Black ${materialBalance.blackLead}` 
+                                    : 'Even'}
+                              </span>
+                            </div>
+
+                            <div className="popover-divider" />
+
+                            <div className="popover-section">
+                              <h5>Captured by You ({capturedPieces[playerColor === 'black' ? 'w' : 'b'].length})</h5>
+                              <div className="captured-grid">
+                                {capturedPieces[playerColor === 'black' ? 'w' : 'b'].length === 0 ? (
+                                  <span className="empty-label">None captured yet</span>
+                                ) : (
+                                  capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
+                                    <span key={idx} className="captured-piece-chip" title={`${p.type.toUpperCase()}`}>
+                                      {p.type.toUpperCase()}
+                                    </span>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="popover-divider" />
+
+                            <div className="popover-section">
+                              <h5>Captured by Opponent ({capturedPieces[playerColor === 'black' ? 'b' : 'w'].length})</h5>
+                              <div className="captured-grid">
+                                {capturedPieces[playerColor === 'black' ? 'b' : 'w'].length === 0 ? (
+                                  <span className="empty-label">None captured yet</span>
+                                ) : (
+                                  capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
+                                    <span key={idx} className="captured-piece-chip opponent" title={`${p.type.toUpperCase()}`}>
+                                      {p.type.toUpperCase()}
+                                    </span>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   {/* User Card (Bottom) */}
                   <div className={`player-card self ${activeTurn === (playerColor === 'white' ? 'w' : 'b') && gameStatus === 'playing' ? 'active-turn' : ''}`}>
