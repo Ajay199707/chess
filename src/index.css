@@ -2168,13 +2168,19 @@ body {
 }
 
 /* --- LIGHT (DAY) MODE STYLES --- */
-.app-root.mode-light {
-  --bg-app: #F7F2E8;
-  --bg-surface: #FFFDF9;
-  --bg-surface-elevated: #EFEAE0;
-  --border-color: rgba(29, 28, 26, 0.12);
-  --text-main: #1D1C1A;
-  --text-muted: #7E7970;
+.app-root.mode-light,
+.app-root.mode-light.theme-classic,
+.app-root.mode-light.theme-wood,
+.app-root.mode-light.theme-metal,
+.app-root.mode-light.theme-slate,
+.app-root.mode-light.theme-gold,
+.app-root.mode-light.theme-forest {
+  --bg-app: #E5E1D8;                     /* Very soft neutral stone-beige (glare free) */
+  --bg-surface: #F5F1E6;                 /* Warm off-white parchment for panels */
+  --bg-surface-elevated: #E9E4D6;        /* Soft elevated warm beige for inputs/menus */
+  --border-color: rgba(42, 40, 37, 0.15); /* Stronger contrast border */
+  --text-main: #2A2825;                  /* Dark charcoal text for strong accessibility */
+  --text-muted: #6E685E;                 /* Clear mid-brown for secondary texts */
 }
 
 /* Clear dark gradients and cards for wood & metal themes in light mode */
@@ -2194,9 +2200,9 @@ body {
 .app-root.mode-light.theme-metal .chat-panel,
 .app-root.mode-light.theme-metal .dialog-alert-card,
 .app-root.mode-light.theme-metal .game-over-banner {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-md);
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 /* Day/Night icons custom transitions */
