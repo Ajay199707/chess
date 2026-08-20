@@ -212,6 +212,63 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Handle spectator joining as player
+  socket.on('join_as_player', ({ color }) => {
+    const room = rooms.get(currentRoomId);
+    if (!room || room.gameState.status !== 'waiting') return;
+
+    if (color !== 'white' && color !== 'black') return;
+    if (room.players[color]) return; // slot occupied
+
+    // Remove from spectators if present
+    room.spectators = room.spectators.filter(s => s.socketId !== socket.id);
+
+    // If currently playing in other slot, vacate it
+    const otherColor = color === 'white' ? 'black' : 'white';
+    if (room.players[otherColor]?.socketId === socket.id) {
+      room.players[otherColor] = null;
+    }
+
+    room.players[color] = { socketId: socket.id, name: currentPlayerName, connected: true };
+    currentPlayerColor = color;
+
+    socket.emit('role_assigned', { color: currentPlayerColor, isSpectator: false });
+    io.to(currentRoomId).emit('room_update', getCleanRoomState(room));
+    io.to(currentRoomId).emit('chat_message', {
+      sender: 'System',
+      text: `${currentPlayerName} joined as ${color.toUpperCase()}.`,
+      isSystem: true,
+      timestamp: Date.now()
+    });
+  });
+
+  // Handle player switching to spectator
+  socket.on('switch_to_spectator', () => {
+    const room = rooms.get(currentRoomId);
+    if (!room || room.gameState.status !== 'waiting') return;
+
+    const isWhite = room.players.white?.socketId === socket.id;
+    const isBlack = room.players.black?.socketId === socket.id;
+    if (!isWhite && !isBlack) return;
+
+    const color = isWhite ? 'white' : 'black';
+    room.players[color] = null;
+
+    if (!room.spectators.some(s => s.socketId === socket.id)) {
+      room.spectators.push({ socketId: socket.id, name: currentPlayerName });
+    }
+    currentPlayerColor = null;
+
+    socket.emit('role_assigned', { color: null, isSpectator: true });
+    io.to(currentRoomId).emit('room_update', getCleanRoomState(room));
+    io.to(currentRoomId).emit('chat_message', {
+      sender: 'System',
+      text: `${currentPlayerName} switched to Spectator mode.`,
+      isSystem: true,
+      timestamp: Date.now()
+    });
+  });
+
   // Handle manual game start by host
   socket.on('start_game', () => {
     const room = rooms.get(currentRoomId);

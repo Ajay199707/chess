@@ -421,6 +421,14 @@ export default function App() {
     if (socket) socket.emit('select_color');
   };
 
+  const handleJoinAsPlayer = (color) => {
+    if (socket) socket.emit('join_as_player', { color });
+  };
+
+  const handleSwitchToSpectator = () => {
+    if (socket) socket.emit('switch_to_spectator');
+  };
+
   const handleStartGame = () => {
     if (socket) socket.emit('start_game');
   };
@@ -1176,6 +1184,11 @@ export default function App() {
                           Switch to Black ➔
                         </button>
                       )}
+                      {isSpectator && !roomState?.players.white && (
+                        <button className="btn-select-slot-color btn-take-seat" onClick={() => handleJoinAsPlayer('white')}>
+                          📥 Sit as White
+                        </button>
+                      )}
                     </div>
 
                     <div className="lobby-separator-icon">
@@ -1193,8 +1206,22 @@ export default function App() {
                           ⬅ Switch to White
                         </button>
                       )}
+                      {isSpectator && !roomState?.players.black && (
+                        <button className="btn-select-slot-color btn-take-seat" onClick={() => handleJoinAsPlayer('black')}>
+                          📥 Sit as Black
+                        </button>
+                      )}
                     </div>
                   </div>
+
+                  {/* Switch to Spectator option for players in lobby */}
+                  {!isSpectator && (
+                    <div className="lobby-spectate-toggle-row">
+                      <button className="btn-secondary" onClick={handleSwitchToSpectator}>
+                        👁️ Switch to Spectator Mode
+                      </button>
+                    </div>
+                  )}
 
                   {roomState?.spectators.length > 0 && (
                     <div className="lobby-spectators-list">

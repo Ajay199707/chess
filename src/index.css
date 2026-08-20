@@ -2099,5 +2099,24 @@ body {
   to { opacity: 1; }
 }
 
+/* --- SPECTATE & TAKE SEAT STYLES --- */
+.lobby-spectate-toggle-row {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-take-seat {
+  background: var(--color-emerald) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-emerald) !important;
+}
+
+.btn-take-seat:hover {
+  background: var(--color-emerald-hover) !important;
+  color: #FFFFFF !important;
+}
+
 
 
