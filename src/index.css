@@ -2168,6 +2168,7 @@ body {
 }
 
 /* --- LIGHT (DAY) MODE STYLES --- */
+body.mode-light,
 .app-root.mode-light,
 .app-root.mode-light.theme-classic,
 .app-root.mode-light.theme-wood,
@@ -2175,34 +2176,38 @@ body {
 .app-root.mode-light.theme-slate,
 .app-root.mode-light.theme-gold,
 .app-root.mode-light.theme-forest {
-  --bg-app: #E5E1D8;                     /* Very soft neutral stone-beige (glare free) */
-  --bg-surface: #F5F1E6;                 /* Warm off-white parchment for panels */
-  --bg-surface-elevated: #E9E4D6;        /* Soft elevated warm beige for inputs/menus */
-  --border-color: rgba(42, 40, 37, 0.15); /* Stronger contrast border */
-  --text-main: #2A2825;                  /* Dark charcoal text for strong accessibility */
-  --text-muted: #6E685E;                 /* Clear mid-brown for secondary texts */
+  --bg-app: #ECE9E0;                     /* Super soft neutral calm stone-grey/beige (completely glare free) */
+  --bg-surface: #F8F6F0;                 /* Beautiful warm ivory paper for panels */
+  --bg-surface-elevated: #EFECE2;        /* Soft elevated warm beige for inputs/menus */
+  --border-color: rgba(42, 40, 37, 0.16); /* High accessibility sharp borders */
+  --text-main: #252422;                  /* Premium charcoal-brown for high readability */
+  --text-muted: #6B665E;                 /* Clear descriptors contrast */
 }
 
-/* Clear dark gradients and cards for wood & metal themes in light mode */
-.app-root.mode-light.theme-wood .player-card,
-.app-root.mode-light.theme-wood .menu-card,
-.app-root.mode-light.theme-wood .online-lobby-panel,
-.app-root.mode-light.theme-wood .stats-panel,
-.app-root.mode-light.theme-wood .moves-log-panel,
-.app-root.mode-light.theme-wood .chat-panel,
-.app-root.mode-light.theme-wood .dialog-alert-card,
-.app-root.mode-light.theme-wood .game-over-banner,
-.app-root.mode-light.theme-metal .player-card,
-.app-root.mode-light.theme-metal .menu-card,
-.app-root.mode-light.theme-metal .online-lobby-panel,
-.app-root.mode-light.theme-metal .stats-panel,
-.app-root.mode-light.theme-metal .moves-log-panel,
-.app-root.mode-light.theme-metal .chat-panel,
-.app-root.mode-light.theme-metal .dialog-alert-card,
-.app-root.mode-light.theme-metal .game-over-banner {
+/* Clear dark gradients and add drop shadows for all panel containers in light mode */
+body.mode-light .player-card,
+body.mode-light .menu-card,
+body.mode-light .online-lobby-panel,
+body.mode-light .stats-panel,
+body.mode-light .moves-log-panel,
+body.mode-light .chat-panel,
+body.mode-light .dialog-alert-card,
+body.mode-light .game-over-banner,
+body.mode-light .control-actions-panel {
   background: var(--bg-surface) !important;
   border: 1px solid var(--border-color) !important;
-  box-shadow: var(--shadow-md) !important;
+  box-shadow: 0 6px 24px rgba(42, 40, 37, 0.08), 0 2px 8px rgba(42, 40, 37, 0.04) !important; /* Premium double-layered soft shadow */
+}
+
+/* Day Mode Chessboard frame shadow and layout alignment */
+body.mode-light .chessboard-wrapper {
+  box-shadow: 0 10px 40px rgba(42, 40, 37, 0.12), 0 2px 10px rgba(42, 40, 37, 0.06) !important;
+}
+
+/* Day Mode Lobby slots adjustments */
+body.mode-light .lobby-player-slot {
+  background: var(--bg-surface-elevated) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02) !important;
 }
 
 /* Day/Night icons custom transitions */

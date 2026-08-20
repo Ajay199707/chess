@@ -132,6 +132,13 @@ export default function App() {
 
   useEffect(() => {
     safeSetItem('chess_dark_mode', String(isDarkMode));
+    if (isDarkMode) {
+      document.body.classList.add('mode-dark');
+      document.body.classList.remove('mode-light');
+    } else {
+      document.body.classList.add('mode-light');
+      document.body.classList.remove('mode-dark');
+    }
   }, [isDarkMode]);
 
   // Handle URL share code join automatically
