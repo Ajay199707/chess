@@ -2193,7 +2193,8 @@ body.mode-light .moves-log-panel,
 body.mode-light .chat-panel,
 body.mode-light .dialog-alert-card,
 body.mode-light .game-over-banner,
-body.mode-light .control-actions-panel {
+body.mode-light .control-actions-panel,
+body.mode-light .modal-content {
   background: var(--bg-surface) !important;
   border: 1px solid var(--border-color) !important;
   box-shadow: 0 6px 24px rgba(42, 40, 37, 0.08), 0 2px 8px rgba(42, 40, 37, 0.04) !important; /* Premium double-layered soft shadow */
@@ -2208,6 +2209,11 @@ body.mode-light .chessboard-wrapper {
 body.mode-light .lobby-player-slot {
   background: var(--bg-surface-elevated) !important;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* High readability for system messages in day mode (overriding the bright gold color) */
+body.mode-light .chat-messages-container .chat-bubble.system {
+  color: #B27A17 !important; /* Rich readable bronze/copper gold */
 }
 
 /* Day/Night icons custom transitions */
