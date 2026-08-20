@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { 
   Play, Users, Award, BookOpen, Volume2, VolumeX, 
   RotateCcw, Shield, HelpCircle, Trophy, Copy, Check,
-  LogOut, ArrowLeftRight, Settings, Send
+  LogOut, ArrowLeftRight, Settings, Send, Sun, Moon
 } from 'lucide-react';
 
 import { Chessboard } from './components/Chessboard';
@@ -49,6 +49,7 @@ export default function App() {
   const [boardTheme, setBoardTheme] = useState(() => safeGetItem('chess_board_theme', 'classic'));
   const [timeControl, setTimeControl] = useState('casual'); // 'casual', 'bullet', 'blitz3', 'blitz5', 'rapid10'
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => safeGetItem('chess_dark_mode', 'true') === 'true');
   const [activeTab, setActiveTab] = useState('game'); // 'game', 'chat', 'moves', 'stats'
 
   // --- GAME & LOGIC STATE ---
@@ -128,6 +129,10 @@ export default function App() {
   useEffect(() => {
     safeSetItem('chess_player_stats', JSON.stringify(stats));
   }, [stats]);
+
+  useEffect(() => {
+    safeSetItem('chess_dark_mode', String(isDarkMode));
+  }, [isDarkMode]);
 
   // Handle URL share code join automatically
   useEffect(() => {
@@ -888,7 +893,7 @@ export default function App() {
 
   // --- RENDER FUNCTIONS ---
   return (
-    <div className={`app-root theme-${boardTheme}`}>
+    <div className={`app-root theme-${boardTheme} ${isDarkMode ? 'mode-dark' : 'mode-light'}`}>
       {/* Toast Alert */}
       {toastMessage && (
         <div className="toast-alert animate-slide-up">
@@ -1072,6 +1077,14 @@ export default function App() {
                 {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                 {soundEnabled ? "Mute Sounds" : "Unmute Sounds"}
               </button>
+              <button 
+                className="btn-text" 
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                title={isDarkMode ? "Switch to Day Mode" : "Switch to Night Mode"}
+              >
+                {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+                {isDarkMode ? "Day Mode" : "Night Mode"}
+              </button>
             </footer>
           </div>
         )}
@@ -1135,6 +1148,15 @@ export default function App() {
                   aria-label="Toggle Sound"
                 >
                   {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                </button>
+
+                <button 
+                  className="icon-only-btn" 
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  title={isDarkMode ? "Switch to Day Mode" : "Switch to Night Mode"}
+                  aria-label={isDarkMode ? "Switch to Day Mode" : "Switch to Night Mode"}
+                >
+                  {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
               </div>
             </header>

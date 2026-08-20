@@ -2166,3 +2166,43 @@ body {
     display: grid !important;
   }
 }
+
+/* --- LIGHT (DAY) MODE STYLES --- */
+.app-root.mode-light {
+  --bg-app: #F7F2E8;
+  --bg-surface: #FFFDF9;
+  --bg-surface-elevated: #EFEAE0;
+  --border-color: rgba(29, 28, 26, 0.12);
+  --text-main: #1D1C1A;
+  --text-muted: #7E7970;
+}
+
+/* Clear dark gradients and cards for wood & metal themes in light mode */
+.app-root.mode-light.theme-wood .player-card,
+.app-root.mode-light.theme-wood .menu-card,
+.app-root.mode-light.theme-wood .online-lobby-panel,
+.app-root.mode-light.theme-wood .stats-panel,
+.app-root.mode-light.theme-wood .moves-log-panel,
+.app-root.mode-light.theme-wood .chat-panel,
+.app-root.mode-light.theme-wood .dialog-alert-card,
+.app-root.mode-light.theme-wood .game-over-banner,
+.app-root.mode-light.theme-metal .player-card,
+.app-root.mode-light.theme-metal .menu-card,
+.app-root.mode-light.theme-metal .online-lobby-panel,
+.app-root.mode-light.theme-metal .stats-panel,
+.app-root.mode-light.theme-metal .moves-log-panel,
+.app-root.mode-light.theme-metal .chat-panel,
+.app-root.mode-light.theme-metal .dialog-alert-card,
+.app-root.mode-light.theme-metal .game-over-banner {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+/* Day/Night icons custom transitions */
+.icon-only-btn svg {
+  transition: transform 0.3s ease;
+}
+.icon-only-btn:hover svg {
+  transform: rotate(15deg);
+}
