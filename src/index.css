@@ -564,6 +564,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
+  min-width: 0;
 }
 
 /* Navigation bar */
@@ -996,6 +998,9 @@ body {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .chat-header {
@@ -1309,6 +1314,8 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.625rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .action-tile {
@@ -1342,6 +1349,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 220px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .panel-header {
@@ -1418,6 +1427,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .stats-section {
@@ -2145,16 +2156,13 @@ body {
     grid-row: 2;
   }
   .left-column .dashboard-tab-pane,
-  .right-column .dashboard-tab-pane {
-    display: block !important;
+  .right-column .dashboard-tab-pane,
+  .right-column .control-actions-panel {
+    display: flex !important;
     opacity: 1 !important;
     transform: none !important;
-    width: 100%;
   }
   .right-column .control-actions-panel {
     display: grid !important;
-    opacity: 1 !important;
-    transform: none !important;
-    width: 100%;
   }
 }
