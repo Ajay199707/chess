@@ -2132,6 +2132,18 @@ body {
 }
 /* --- VIEWPORT RESPONSIVE OVERRIDES --- */
 @media (min-width: 769px) {
+  .left-column {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .board-column {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .right-column {
+    grid-column: 3;
+    grid-row: 2;
+  }
   .left-column .dashboard-tab-pane,
   .right-column .dashboard-tab-pane,
   .right-column .control-actions-panel {
