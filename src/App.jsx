@@ -583,6 +583,8 @@ export default function App() {
     });
 
     newSocket.on('undo_accepted', () => {
+      setLastMove(null);
+      setGameStatus('playing');
       showToast("Move undone.");
     });
 
@@ -850,26 +852,7 @@ export default function App() {
 
   const activeTurn = game.turn();
 
-  // Socket listener for Undo Accept/Decline trigger
-  useEffect(() => {
-    if (!socket) return;
-    
-    const handleUndoAccept = ({ steps }) => {
-      const tempGame = new Chess();
-      tempGame.loadPgn(game.pgn());
-      for (let i = 0; i < steps; i++) {
-        tempGame.undo();
-      }
-      setGame(tempGame);
-      setLastMove(null);
-      setGameStatus('playing');
-    };
 
-    socket.on('undo_accepted', handleUndoAccept);
-    return () => {
-      socket.off('undo_accepted', handleUndoAccept);
-    };
-  }, [socket, game]);
 
   const renderTurnBanner = () => {
     if (gameStatus !== 'playing') return null;
