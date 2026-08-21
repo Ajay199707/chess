@@ -659,10 +659,23 @@ body {
   cursor: pointer;
   display: flex;
   align-items: center;
+  transition: color 0.2s;
 }
 
 .icon-only-btn:hover {
   color: var(--text-main);
+}
+
+.icon-only-btn.active-icon {
+  color: var(--color-gold);
+}
+
+.icon-only-btn.active-icon:hover {
+  color: var(--color-gold-hover);
+}
+
+.icon-only-btn.inactive-icon {
+  color: var(--text-muted);
 }
 
 /* Mobile Tabs Bar */
@@ -2245,18 +2258,24 @@ body.mode-light .chat-messages-container .chat-bubble.system {
   border: 1px solid var(--border-color);
   color: var(--text-main);
   font-size: 1.15rem;
-  cursor: pointer;
+  cursor: grab;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   box-shadow: var(--shadow-lg);
   transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.2s;
+  user-select: none;
+  touch-action: none; /* Prevents browser scroll during mobile touch dragging */
 }
 
 .floating-captures-trigger:hover {
   transform: scale(1.08);
   background: var(--bg-surface);
+}
+
+.floating-captures-trigger:active {
+  cursor: grabbing;
 }
 
 .floating-captures-trigger.active {

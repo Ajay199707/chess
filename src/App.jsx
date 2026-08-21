@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { 
   Play, Users, Award, BookOpen, Volume2, VolumeX, 
   RotateCcw, Shield, HelpCircle, Trophy, Copy, Check,
-  LogOut, ArrowLeftRight, Settings, Send, Sun, Moon
+  LogOut, ArrowLeftRight, Settings, Send, Sun, Moon, Coins
 } from 'lucide-react';
 
 import { Chessboard } from './components/Chessboard';
@@ -51,6 +51,7 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(() => safeGetItem('chess_dark_mode', 'true') === 'true');
   const [isCapturesOpen, setIsCapturesOpen] = useState(false);
+  const [showFloatingCaptures, setShowFloatingCaptures] = useState(() => safeGetItem('chess_show_floating_captures', 'true') === 'true');
   const [activeTab, setActiveTab] = useState('game'); // 'game', 'chat', 'moves', 'stats'
 
   // --- GAME & LOGIC STATE ---
@@ -103,6 +104,72 @@ export default function App() {
   const socketRef = useRef(null);
   const capturesRef = useRef(null);
 
+  // Draggable Captured Pieces Bag logic
+  const [bagPos, setBagPos] = useState({ x: 0, y: 0 });
+  const [isDraggingBag, setIsDraggingBag] = useState(false);
+  const bagDragStart = useRef({ x: 0, y: 0 });
+  const bagDragOffset = useRef({ x: 0, y: 0 });
+  const bagDragDist = useRef(0);
+
+  const handleBagMouseDown = (e) => {
+    if (e.button !== 0) return;
+    setIsDraggingBag(true);
+    bagDragStart.current = { x: e.clientX, y: e.clientY };
+    bagDragOffset.current = { x: bagPos.x, y: bagPos.y };
+    bagDragDist.current = 0;
+    e.preventDefault();
+  };
+
+  const handleBagTouchStart = (e) => {
+    const touch = e.touches[0];
+    setIsDraggingBag(true);
+    bagDragStart.current = { x: touch.clientX, y: touch.clientY };
+    bagDragOffset.current = { x: bagPos.x, y: bagPos.y };
+    bagDragDist.current = 0;
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDraggingBag) return;
+      const dx = e.clientX - bagDragStart.current.x;
+      const dy = e.clientY - bagDragStart.current.y;
+      bagDragDist.current = Math.sqrt(dx * dx + dy * dy);
+      setBagPos({
+        x: bagDragOffset.current.x + dx,
+        y: bagDragOffset.current.y + dy
+      });
+    };
+
+    const handleTouchMove = (e) => {
+      if (!isDraggingBag) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - bagDragStart.current.x;
+      const dy = touch.clientY - bagDragStart.current.y;
+      bagDragDist.current = Math.sqrt(dx * dx + dy * dy);
+      setBagPos({
+        x: bagDragOffset.current.x + dx,
+        y: bagDragOffset.current.y + dy
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingBag(false);
+    };
+
+    if (isDraggingBag) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', handleMouseUp);
+    }
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [isDraggingBag]);
+
   // Cleanup socket on unmount & load confetti script
   useEffect(() => {
     const script = document.createElement('script');
@@ -131,6 +198,10 @@ export default function App() {
   useEffect(() => {
     safeSetItem('chess_player_stats', JSON.stringify(stats));
   }, [stats]);
+
+  useEffect(() => {
+    safeSetItem('chess_show_floating_captures', String(showFloatingCaptures));
+  }, [showFloatingCaptures]);
 
   useEffect(() => {
     safeSetItem('chess_dark_mode', String(isDarkMode));
@@ -1109,6 +1180,14 @@ export default function App() {
                 {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
                 {isDarkMode ? "Day Mode" : "Night Mode"}
               </button>
+              <button 
+                className="btn-text" 
+                onClick={() => setShowFloatingCaptures(!showFloatingCaptures)}
+                title={showFloatingCaptures ? "Hide Floating Captures Bag" : "Show Floating Captures Bag"}
+              >
+                <Coins size={16} />
+                {showFloatingCaptures ? "Hide Captures Bag" : "Show Captures Bag"}
+              </button>
             </footer>
           </div>
         )}
@@ -1181,6 +1260,15 @@ export default function App() {
                   aria-label={isDarkMode ? "Switch to Day Mode" : "Switch to Night Mode"}
                 >
                   {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+
+                <button 
+                  className={`icon-only-btn ${showFloatingCaptures ? 'active-icon' : 'inactive-icon'}`}
+                  onClick={() => setShowFloatingCaptures(!showFloatingCaptures)}
+                  title={showFloatingCaptures ? "Hide Floating Captures Bag" : "Show Floating Captures Bag"}
+                  aria-label={showFloatingCaptures ? "Hide Floating Captures Bag" : "Show Floating Captures Bag"}
+                >
+                  <Coins size={20} />
                 </button>
               </div>
             </header>
@@ -1361,12 +1449,26 @@ export default function App() {
                     />
 
                     {/* Floating Captured Pieces (Coins) Toggler */}
-                    {gameStatus === 'playing' && (
-                      <div className="floating-captures-container" ref={capturesRef}>
+                    {gameStatus === 'playing' && showFloatingCaptures && (
+                      <div 
+                        className="floating-captures-container" 
+                        ref={capturesRef}
+                        style={{
+                          transform: `translate(${bagPos.x}px, ${bagPos.y}px)`
+                        }}
+                      >
                         <button 
                           className={`floating-captures-trigger ${isCapturesOpen ? 'active' : ''}`}
-                          onClick={() => setIsCapturesOpen(!isCapturesOpen)}
-                          title="View Captured Pieces"
+                          onMouseDown={handleBagMouseDown}
+                          onTouchStart={handleBagTouchStart}
+                          onClick={() => {
+                            if (bagDragDist.current > 5) {
+                              bagDragDist.current = 0;
+                              return; // ignore as it was a drag
+                            }
+                            setIsCapturesOpen(!isCapturesOpen);
+                          }}
+                          title="Drag to reposition / Click to view captured coins"
                           aria-label="View Captured Pieces"
                         >
                           🪙 <span className="captured-badge-count">{capturedPieces[playerColor === 'black' ? 'w' : 'b'].length}</span>
