@@ -653,9 +653,11 @@ io.on('connection', (socket) => {
 
   // Global Lobby Chat
   socket.on('send_global_chat', ({ text }) => {
-    if (!currentPlayerName) return;
+    const user = onlineUsers.get(socket.id);
+    const senderName = user ? user.name : (currentPlayerName || 'Anonymous');
+    if (!senderName) return;
     io.emit('global_chat_message', {
-      sender: currentPlayerName,
+      sender: senderName,
       text,
       timestamp: Date.now(),
     });

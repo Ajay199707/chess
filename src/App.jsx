@@ -1447,18 +1447,14 @@ export default function App() {
               <OnlinePlayersPanel
                 onlineUsers={onlineUsers}
                 activeMatches={activeMatches}
+                globalMessages={globalMessages}
+                socket={socket}
+                playerName={playerName}
                 currentUserEmail={userProfile?.email}
                 onSendChallenge={handleSendChallenge}
                 onNotifyPlayer={handleNotifyPlayer}
                 onWatchMatch={(roomId) => socket.emit('join_room', { roomCode: roomId, role: 'spectator' })}
               />
-              <div style={{ marginTop: '1rem', height: '400px' }}>
-                <GlobalChatPanel 
-                  socket={socket} 
-                  playerName={playerName} 
-                  globalMessages={globalMessages} 
-                />
-              </div>
             </div>
           </div>
         )}

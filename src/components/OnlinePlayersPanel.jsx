@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Users, Award, Play, Eye } from 'lucide-react';
+import { Users, Award, Play, Eye, MessageSquare } from 'lucide-react';
+import { GlobalChatPanel } from './GlobalChatPanel';
 
-export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], currentUserEmail, onSendChallenge, onNotifyPlayer, onWatchMatch }) {
+export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMessages = [], currentUserEmail, onSendChallenge, onNotifyPlayer, onWatchMatch, socket, playerName }) {
   const [selectedTimeControl, setSelectedTimeControl] = useState('blitz5');
-  const [activeTab, setActiveTab] = useState('players'); // 'players' or 'matches'
+  const [activeTab, setActiveTab] = useState('players'); // 'players', 'matches', 'chat'
 
   // Filter out current user from the challenge options list
   const otherUsers = onlineUsers.filter(u => u.email !== currentUserEmail?.toLowerCase());
@@ -13,19 +14,25 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], currentUse
   const isCurrentUserPlaying = currentUser?.status === 'playing';
 
   return (
-    <div className="online-players-panel">
+    <div className="online-players-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '400px' }}>
       <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <button 
           onClick={() => setActiveTab('players')}
-          style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'players' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'players' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
         >
-          <Users size={16} /> Players ({onlineUsers.length})
+          <Users size={16} /> Players
         </button>
         <button 
           onClick={() => setActiveTab('matches')}
-          style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'matches' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'matches' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
         >
-          <Eye size={16} /> Live Matches ({activeMatches.length})
+          <Eye size={16} /> Matches
+        </button>
+        <button 
+          onClick={() => setActiveTab('chat')}
+          style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'chat' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
+        >
+          <MessageSquare size={16} /> Chat
         </button>
       </div>
 
@@ -140,6 +147,16 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], currentUse
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'chat' && (
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingTop: '1rem' }}>
+          <GlobalChatPanel 
+            socket={socket} 
+            playerName={playerName} 
+            globalMessages={globalMessages} 
+          />
         </div>
       )}
     </div>
