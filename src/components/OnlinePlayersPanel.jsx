@@ -57,7 +57,7 @@ export function OnlinePlayersPanel({ onlineUsers, currentUserEmail, onSendChalle
                     ) : (
                       <button
                         className="btn-challenge-primary"
-                        onClick={() => onSendChallenge(player.email, selectedTimeControl)}
+                        onClick={() => onSendChallenge(player.email, player.name, selectedTimeControl)}
                         title={`Challenge ${player.name} to a match`}
                       >
                         <Play size={10} /> Challenge

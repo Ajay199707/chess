@@ -339,7 +339,9 @@ export default function App() {
       ? `${window.location.protocol}//${window.location.hostname}:3001` 
       : (BACKEND_PROD_URL !== "YOUR_RENDER_BACKEND_URL" ? BACKEND_PROD_URL : window.location.origin);
 
-    const newSocket = io(socketUrl);
+    const newSocket = io(socketUrl, {
+      transports: ['websocket']
+    });
     socketRef.current = newSocket;
     setSocket(newSocket);
 
@@ -443,10 +445,10 @@ export default function App() {
     }
   };
 
-  const handleSendChallenge = (targetEmail, timeControlValue) => {
+  const handleSendChallenge = (targetEmail, targetName, timeControlValue) => {
     if (socket) {
       socket.emit('send_challenge', { targetEmail, timeControl: timeControlValue });
-      showToast(`Challenge sent to ${targetEmail}`);
+      showToast(`Challenge sent to ${targetName}`);
     }
   };
 
