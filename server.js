@@ -311,6 +311,25 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('notify_next_match', ({ targetEmail }) => {
+    const challenger = onlineUsers.get(socket.id);
+    if (!challenger) return;
+
+    let targetSocketId = null;
+    onlineUsers.forEach((user, sId) => {
+      if (user.email === targetEmail.toLowerCase().trim()) {
+        targetSocketId = sId;
+      }
+    });
+
+    if (targetSocketId) {
+      io.to(targetSocketId).emit('next_match_notification', {
+        challengerName: challenger.name,
+        challengerEmail: challenger.email
+      });
+    }
+  });
+
   socket.on('respond_challenge', ({ challengeId, accept }) => {
     const challenge = activeChallenges.get(challengeId);
     if (!challenge) {

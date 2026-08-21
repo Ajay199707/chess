@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Users, Award, Play } from 'lucide-react';
 
-export function OnlinePlayersPanel({ onlineUsers, currentUserEmail, onSendChallenge }) {
+export function OnlinePlayersPanel({ onlineUsers, currentUserEmail, onSendChallenge, onNotifyPlayer }) {
   const [selectedTimeControl, setSelectedTimeControl] = useState('blitz5');
 
   // Filter out current user from the challenge options list
@@ -53,7 +53,17 @@ export function OnlinePlayersPanel({ onlineUsers, currentUserEmail, onSendChalle
 
                   <div className="player-action">
                     {isPlaying ? (
-                      <span className="status-tag playing">In Match</span>
+                      <div className="in-game-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <span className="status-tag playing">In Match</span>
+                        <button
+                          className="btn-challenge-primary btn-notify-next"
+                          onClick={() => onNotifyPlayer && onNotifyPlayer(player.email, player.name)}
+                          title={`Notify ${player.name} that you are waiting for a match`}
+                          style={{ padding: '0.375rem 0.5rem', background: '#3b82f6', color: 'white' }}
+                        >
+                          🔔 Notify
+                        </button>
+                      </div>
                     ) : (
                       <button
                         className="btn-challenge-primary"

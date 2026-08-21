@@ -5,7 +5,7 @@ import {
   Play, Users, Award, BookOpen, Volume2, VolumeX, 
   RotateCcw, Shield, HelpCircle, Trophy, Copy, Check,
   LogOut, ArrowLeftRight, Settings, Send, Sun, Moon, Coins,
-  MessageSquarePlus
+  MessageSquarePlus, X
 } from 'lucide-react';
 
 import { Chessboard } from './components/Chessboard';
@@ -111,6 +111,7 @@ export default function App() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [rematchRequestSent, setRematchRequestSent] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [nextMatchNotifications, setNextMatchNotifications] = useState([]); // [{ id, name, email }]
 
   // References
   const botTimeoutRef = useRef(null);
@@ -431,6 +432,15 @@ export default function App() {
       }
     });
 
+    newSocket.on('next_match_notification', ({ challengerName, challengerEmail }) => {
+      const noteId = Math.random().toString(36).substring(2, 9);
+      setNextMatchNotifications(prev => [...prev, { id: noteId, name: challengerName, email: challengerEmail }]);
+      triggerSound('capture');
+      setTimeout(() => {
+        setNextMatchNotifications(prev => prev.filter(n => n.id !== noteId));
+      }, 8000);
+    });
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -459,6 +469,13 @@ export default function App() {
   const handleSubmitFeedback = ({ type, rating, message }) => {
     if (socket) {
       socket.emit('submit_feedback', { type, rating, message });
+    }
+  };
+
+  const handleNotifyPlayer = (targetEmail, targetName) => {
+    if (socket) {
+      socket.emit('notify_next_match', { targetEmail });
+      showToast(`Notified ${targetName} that you are waiting!`);
     }
   };
 
@@ -1166,6 +1183,28 @@ export default function App() {
         </div>
       )}
 
+      {/* Floating Next Match Notifications Stack */}
+      {nextMatchNotifications.length > 0 && (
+        <div className="next-match-notifications-container">
+          {nextMatchNotifications.map((note) => (
+            <div key={note.id} className="next-match-notification-bubble animate-slide-in-right">
+              <span className="bell-icon">🔔</span>
+              <div className="notification-content" style={{ flex: 1, textAlign: 'left', fontSize: '0.8125rem' }}>
+                <strong>{note.name}</strong> is waiting to play the next match with you!
+              </div>
+              <button 
+                className="dismiss-note-btn"
+                onClick={() => setNextMatchNotifications(prev => prev.filter(n => n.id !== note.id))}
+                aria-label="Dismiss notification"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', padding: '2px' }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Challenge Request Invitation Overlay Modal */}
       {activeChallengeRequest && (
         <div className="challenge-request-overlay">
@@ -1405,6 +1444,7 @@ export default function App() {
                 onlineUsers={onlineUsers}
                 currentUserEmail={userProfile?.email}
                 onSendChallenge={handleSendChallenge}
+                onNotifyPlayer={handleNotifyPlayer}
               />
             </div>
           </div>
@@ -1889,6 +1929,7 @@ export default function App() {
                   onlineUsers={onlineUsers}
                   currentUserEmail={userProfile?.email}
                   onSendChallenge={handleSendChallenge}
+                  onNotifyPlayer={handleNotifyPlayer}
                 />
               </div>
             </div>
