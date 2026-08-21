@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Chess } from 'chess.js';
 import * as db from './server/database.js';
+import crypto from 'crypto';
 
 const onlineUsers = new Map(); // socket.id -> { name, email, elo, status: 'lobby' | 'playing' }
 const activeChallenges = new Map(); // challengeId -> { challengerEmail, targetEmail, timeControl, challengerSocketId }
