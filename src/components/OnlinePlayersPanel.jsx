@@ -7,6 +7,10 @@ export function OnlinePlayersPanel({ onlineUsers, currentUserEmail, onSendChalle
   // Filter out current user from the challenge options list
   const otherUsers = onlineUsers.filter(u => u.email !== currentUserEmail?.toLowerCase());
 
+  // Determine if current user is playing
+  const currentUser = onlineUsers.find(u => u.email === currentUserEmail?.toLowerCase());
+  const isCurrentUserPlaying = currentUser?.status === 'playing';
+
   return (
     <div className="online-players-panel">
       <div className="panel-header">
@@ -55,23 +59,27 @@ export function OnlinePlayersPanel({ onlineUsers, currentUserEmail, onSendChalle
                     {isPlaying ? (
                       <div className="in-game-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                         <span className="status-tag playing">In Match</span>
-                        <button
-                          className="btn-challenge-primary btn-notify-next"
-                          onClick={() => onNotifyPlayer && onNotifyPlayer(player.email, player.name)}
-                          title={`Notify ${player.name} that you are waiting for a match`}
-                          style={{ padding: '0.375rem 0.5rem', background: '#3b82f6', color: 'white' }}
-                        >
-                          🔔 Notify
-                        </button>
+                        {!isCurrentUserPlaying && (
+                          <button
+                            className="btn-challenge-primary btn-notify-next"
+                            onClick={() => onNotifyPlayer && onNotifyPlayer(player.email, player.name)}
+                            title={`Notify ${player.name} that you're waiting for next match`}
+                            style={{ padding: '0.375rem 0.5rem', background: '#3b82f6', color: 'white' }}
+                          >
+                            🔔 Notify
+                          </button>
+                        )}
                       </div>
                     ) : (
-                      <button
-                        className="btn-challenge-primary"
-                        onClick={() => onSendChallenge(player.email, player.name, selectedTimeControl)}
-                        title={`Challenge ${player.name} to a match`}
-                      >
-                        <Play size={10} /> Challenge
-                      </button>
+                      !isCurrentUserPlaying && (
+                        <button
+                          className="btn-challenge-primary"
+                          onClick={() => onSendChallenge(player.email, player.name, selectedTimeControl)}
+                          title={`Challenge ${player.name} to a match`}
+                        >
+                          <Play size={10} /> Challenge
+                        </button>
+                      )
                     )}
                   </div>
                 </div>

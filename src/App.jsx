@@ -1667,14 +1667,14 @@ export default function App() {
                     {/* Captured Pieces by Opponent (shows your captured pieces) */}
                     <div className="captured-panel">
                       <div className="piece-chips">
-                        {capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
+                        {capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
                           <span key={idx} className="captured-piece-icon">
                             {p.type.toUpperCase()}
                           </span>
                         ))}
                       </div>
                       <span className="lead-tag">
-                        {playerColor === 'black' ? materialBalance.blackLead : materialBalance.whiteLead}
+                        {playerColor === 'black' ? materialBalance.whiteLead : materialBalance.blackLead}
                       </span>
                     </div>
 
@@ -1721,7 +1721,7 @@ export default function App() {
                           title="Drag to reposition / Click to view captured coins"
                           aria-label="View Captured Pieces"
                         >
-                          🪙 <span className="captured-badge-count">{capturedPieces[playerColor === 'black' ? 'w' : 'b'].length}</span>
+                          🪙 <span className="captured-badge-count">{capturedPieces[playerColor === 'black' ? 'b' : 'w'].length}</span>
                         </button>
 
                         {isCapturesOpen && (
@@ -1740,12 +1740,12 @@ export default function App() {
                             <div className="popover-divider" />
 
                             <div className="popover-section">
-                              <h5>Captured by You ({capturedPieces[playerColor === 'black' ? 'w' : 'b'].length})</h5>
+                              <h5>Captured by You ({capturedPieces[playerColor === 'black' ? 'b' : 'w'].length})</h5>
                               <div className="captured-grid">
-                                {capturedPieces[playerColor === 'black' ? 'w' : 'b'].length === 0 ? (
+                                {capturedPieces[playerColor === 'black' ? 'b' : 'w'].length === 0 ? (
                                   <span className="empty-label">None captured yet</span>
                                 ) : (
-                                  capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
+                                  capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
                                     <span key={idx} className="captured-piece-chip" title={`${p.type.toUpperCase()}`}>
                                       {p.type.toUpperCase()}
                                     </span>
@@ -1757,12 +1757,12 @@ export default function App() {
                             <div className="popover-divider" />
 
                             <div className="popover-section">
-                              <h5>Captured by Opponent ({capturedPieces[playerColor === 'black' ? 'b' : 'w'].length})</h5>
+                              <h5>Captured by Opponent ({capturedPieces[playerColor === 'black' ? 'w' : 'b'].length})</h5>
                               <div className="captured-grid">
-                                {capturedPieces[playerColor === 'black' ? 'b' : 'w'].length === 0 ? (
+                                {capturedPieces[playerColor === 'black' ? 'w' : 'b'].length === 0 ? (
                                   <span className="empty-label">None captured yet</span>
                                 ) : (
-                                  capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
+                                  capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
                                     <span key={idx} className="captured-piece-chip opponent" title={`${p.type.toUpperCase()}`}>
                                       {p.type.toUpperCase()}
                                     </span>
@@ -1794,14 +1794,14 @@ export default function App() {
                     {/* Captured Pieces by User */}
                     <div className="captured-panel">
                       <div className="piece-chips">
-                        {capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
+                        {capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
                           <span key={idx} className="captured-piece-icon">
                             {p.type.toUpperCase()}
                           </span>
                         ))}
                       </div>
                       <span className="lead-tag">
-                        {playerColor === 'black' ? materialBalance.whiteLead : materialBalance.blackLead}
+                        {playerColor === 'black' ? materialBalance.blackLead : materialBalance.whiteLead}
                       </span>
                     </div>
 
