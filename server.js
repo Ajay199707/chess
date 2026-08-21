@@ -134,9 +134,24 @@ function broadcastOnlineUsers() {
     }
   }
 
+  const activeMatches = [];
+  for (const [roomId, room] of rooms.entries()) {
+    if (room.gameMode === 'online-2p' && room.gameState.status === 'playing') {
+      activeMatches.push({
+        id: roomId,
+        white: room.players.white?.name || 'Waiting...',
+        whiteElo: room.players.white?.elo || 1200,
+        black: room.players.black?.name || 'Waiting...',
+        blackElo: room.players.black?.elo || 1200,
+        spectators: room.spectators.length,
+      });
+    }
+  }
+
   io.emit('online_users_update', {
     users: uniqueUsers,
-    totalOnline: uniqueUsers.length
+    totalOnline: uniqueUsers.length,
+    activeMatches
   });
 }
 
@@ -636,7 +651,17 @@ io.on('connection', (socket) => {
     io.to(currentRoomId).emit('room_update', getCleanRoomState(room));
   });
 
-  // Handle chat messages and emoji reactions
+  // Global Lobby Chat
+  socket.on('send_global_chat', ({ text }) => {
+    if (!currentPlayerName) return;
+    io.emit('global_chat_message', {
+      sender: currentPlayerName,
+      text,
+      timestamp: Date.now(),
+    });
+  });
+
+  // Handle room chat messages and emoji reactions
   socket.on('send_chat', ({ text, isReaction }) => {
     if (!currentRoomId) return;
     const room = rooms.get(currentRoomId);

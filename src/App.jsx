@@ -10,6 +10,7 @@ import {
 
 import { Chessboard } from './components/Chessboard';
 import { ChatPanel } from './components/ChatPanel';
+import { GlobalChatPanel } from './components/GlobalChatPanel';
 import { Guidelines } from './components/Guidelines';
 import { LoginScreen } from './components/LoginScreen';
 import { OnlinePlayersPanel } from './components/OnlinePlayersPanel';
@@ -62,6 +63,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userProfile, setUserProfile] = useState(null); // { name, email, stats: { gamesPlayed, onlineMatchesPlayed, elo } }
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [activeMatches, setActiveMatches] = useState([]);
   const [activeChallengeRequest, setActiveChallengeRequest] = useState(null); // { challengerName, challengerEmail, timeControl, challengeId }
   const userToken = safeGetItem('chess_user_token', null);
   const userEmail = safeGetItem('chess_user_email', null);
@@ -95,6 +97,7 @@ export default function App() {
   const [isSpectator, setIsSpectator] = useState(false);
   const [roomState, setRoomState] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
+  const [globalMessages, setGlobalMessages] = useState([]);
   
   // Online dialog/offer prompts
   const [drawOfferPending, setDrawOfferPending] = useState(null); // { from }
@@ -357,8 +360,11 @@ export default function App() {
       }
     });
 
-    newSocket.on('online_users_update', ({ users }) => {
+    newSocket.on('online_users_update', ({ users, activeMatches }) => {
       setOnlineUsers(users);
+      if (activeMatches) {
+        setActiveMatches(activeMatches);
+      }
     });
 
     newSocket.on('challenge_received', (challenge) => {
@@ -844,9 +850,14 @@ export default function App() {
       showToast("Restart request declined by opponent.");
     };
 
+    const handleGlobalChatMessage = (msg) => {
+      setGlobalMessages(prev => [...prev, msg].slice(-100));
+    };
+
     socket.on('role_assigned', handleRoleAssigned);
     socket.on('room_update', handleRoomUpdate);
     socket.on('chat_message', handleChatMessage);
+    socket.on('global_chat_message', handleGlobalChatMessage);
     socket.on('draw_offered', handleDrawOffered);
     socket.on('draw_declined', handleDrawDeclined);
     socket.on('undo_requested', handleUndoRequested);
@@ -859,6 +870,7 @@ export default function App() {
       socket.off('role_assigned', handleRoleAssigned);
       socket.off('room_update', handleRoomUpdate);
       socket.off('chat_message', handleChatMessage);
+      socket.off('global_chat_message', handleGlobalChatMessage);
       socket.off('draw_offered', handleDrawOffered);
       socket.off('draw_declined', handleDrawDeclined);
       socket.off('undo_requested', handleUndoRequested);
@@ -1434,10 +1446,19 @@ export default function App() {
             <div className="menu-lobby-sidebar">
               <OnlinePlayersPanel
                 onlineUsers={onlineUsers}
+                activeMatches={activeMatches}
                 currentUserEmail={userProfile?.email}
                 onSendChallenge={handleSendChallenge}
                 onNotifyPlayer={handleNotifyPlayer}
+                onWatchMatch={(roomId) => socket.emit('join_room', { roomCode: roomId, role: 'spectator' })}
               />
+              <div style={{ marginTop: '1rem', height: '400px' }}>
+                <GlobalChatPanel 
+                  socket={socket} 
+                  playerName={playerName} 
+                  globalMessages={globalMessages} 
+                />
+              </div>
             </div>
           </div>
         )}
