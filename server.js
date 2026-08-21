@@ -233,6 +233,40 @@ io.on('connection', (socket) => {
       user.status = 'lobby';
       broadcastOnlineUsers();
     }
+
+    if (currentRoomId) {
+      const room = rooms.get(currentRoomId);
+      if (room) {
+        const isWhite = room.players.white?.socketId === socket.id;
+        const isBlack = room.players.black?.socketId === socket.id;
+
+        if (isWhite) {
+          room.players.white = null;
+        } else if (isBlack) {
+          room.players.black = null;
+        } else {
+          room.spectators = room.spectators.filter(s => s.socketId !== socket.id);
+        }
+
+        socket.leave(currentRoomId);
+
+        const noWhite = !room.players.white;
+        const noBlack = !room.players.black;
+        if (noWhite && noBlack && room.spectators.length === 0) {
+          cleanRoom(currentRoomId);
+        } else {
+          io.to(currentRoomId).emit('room_update', getCleanRoomState(room));
+          io.to(currentRoomId).emit('chat_message', {
+            sender: 'System',
+            text: `${currentPlayerName} has left the room.`,
+            isSystem: true,
+            timestamp: Date.now(),
+          });
+        }
+      }
+      currentRoomId = '';
+      currentPlayerColor = null;
+    }
   });
 
   // --- DIRECT PLAY CHALLENGES ---

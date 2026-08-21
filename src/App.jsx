@@ -984,9 +984,8 @@ export default function App() {
   // --- UTILITIES ---
   const handleExitMatch = () => {
     if (window.confirm("Exit match and return to menu?")) {
-      if (socket) {
-        socket.disconnect();
-        setSocket(null);
+      if (socket && gameStatus === 'playing') {
+        socket.emit('resign');
       }
       if (botTimeoutRef.current) clearTimeout(botTimeoutRef.current);
       // Clean query params on return to menu
