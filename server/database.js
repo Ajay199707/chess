@@ -164,3 +164,23 @@ export function recordMatchComplete(email, opponentEmail, outcome) {
   saveDb(db);
   return { newElo: user.stats.elo, eloChange: change };
 }
+
+export function saveFeedback(name, email, type, rating, message) {
+  const db = loadDb();
+  if (!db.feedbacks) {
+    db.feedbacks = [];
+  }
+  const feedbackId = 'fb_' + crypto.randomBytes(4).toString('hex');
+  const entry = {
+    feedbackId,
+    name: name ? name.trim() : 'Guest',
+    email: email ? email.toLowerCase().trim() : 'Anonymous',
+    type,
+    rating: parseInt(rating) || 5,
+    message: message ? message.trim().substring(0, 500) : '',
+    timestamp: Date.now()
+  };
+  db.feedbacks.push(entry);
+  saveDb(db);
+  return { success: true, feedbackId };
+}

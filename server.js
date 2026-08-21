@@ -227,6 +227,14 @@ io.on('connection', (socket) => {
     socket.emit('logged_out');
   });
 
+  socket.on('submit_feedback', ({ type, rating, message }) => {
+    const user = onlineUsers.get(socket.id);
+    const name = user ? user.name : 'Guest';
+    const email = user ? user.email : 'Anonymous';
+    const res = db.saveFeedback(name, email, type, rating, message);
+    socket.emit('feedback_response', res);
+  });
+
   socket.on('enter_lobby', () => {
     const user = onlineUsers.get(socket.id);
     if (user) {

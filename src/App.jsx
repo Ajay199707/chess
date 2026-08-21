@@ -4,7 +4,8 @@ import { io } from 'socket.io-client';
 import { 
   Play, Users, Award, BookOpen, Volume2, VolumeX, 
   RotateCcw, Shield, HelpCircle, Trophy, Copy, Check,
-  LogOut, ArrowLeftRight, Settings, Send, Sun, Moon, Coins
+  LogOut, ArrowLeftRight, Settings, Send, Sun, Moon, Coins,
+  MessageSquarePlus
 } from 'lucide-react';
 
 import { Chessboard } from './components/Chessboard';
@@ -12,6 +13,7 @@ import { ChatPanel } from './components/ChatPanel';
 import { Guidelines } from './components/Guidelines';
 import { LoginScreen } from './components/LoginScreen';
 import { OnlinePlayersPanel } from './components/OnlinePlayersPanel';
+import { FeedbackModal } from './components/FeedbackModal';
 import { getBestMove } from './utils/chessAI';
 import { playSound } from './utils/audio';
 
@@ -108,6 +110,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [rematchRequestSent, setRematchRequestSent] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // References
   const botTimeoutRef = useRef(null);
@@ -420,6 +423,14 @@ export default function App() {
       });
     });
 
+    newSocket.on('feedback_response', (res) => {
+      if (res.success) {
+        showToast("Thank you for your feedback! Review logged successfully.");
+      } else {
+        showToast("Failed to submit feedback. Please try again.");
+      }
+    });
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -442,6 +453,12 @@ export default function App() {
   const handleLogout = () => {
     if (socket) {
       socket.emit('logout', { email: userProfile?.email, token: userToken });
+    }
+  };
+
+  const handleSubmitFeedback = ({ type, rating, message }) => {
+    if (socket) {
+      socket.emit('submit_feedback', { type, rating, message });
     }
   };
 
@@ -1186,6 +1203,11 @@ export default function App() {
 
       {/* MODALS */}
       <Guidelines isOpen={isGuidelinesOpen} onClose={() => setIsGuidelinesOpen(false)} />
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+        onSubmit={handleSubmitFeedback} 
+      />
 
       {/* Main Container */}
       <div className="game-container">
@@ -1360,6 +1382,13 @@ export default function App() {
                 >
                   <Coins size={16} />
                   {showFloatingCaptures ? "Hide Captures Bag" : "Show Captures Bag"}
+                </button>
+                <button 
+                  className="btn-text" 
+                  onClick={() => setIsFeedbackOpen(true)}
+                  title="Share Feedback or Write a Review"
+                >
+                  <MessageSquarePlus size={16} /> Share Feedback
                 </button>
                 <button 
                   className="btn-text btn-logout" 

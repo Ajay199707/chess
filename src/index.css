@@ -2815,4 +2815,133 @@ body.mode-light .challenge-request-overlay {
   background: rgba(239, 68, 68, 0.08) !important;
 }
 
+/* --- FEEDBACK & REVIEW MODAL --- */
+.feedback-card {
+  position: relative;
+  max-width: 440px !important;
+  box-sizing: border-box;
+}
 
+.feedback-close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+}
+
+.feedback-close-btn:hover {
+  background: var(--bg-surface-elevated);
+  color: var(--text-main);
+}
+
+.feedback-title-icon {
+  color: var(--color-gold) !important;
+}
+
+body.mode-light .feedback-title-icon {
+  color: #B27A17 !important;
+}
+
+.feedback-type-selector {
+  display: flex;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+  background: var(--bg-surface-elevated);
+}
+
+.feedback-type-selector button {
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.625rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.feedback-type-selector button.active {
+  background: var(--color-gold);
+  color: #12131C;
+}
+
+body.mode-light .feedback-type-selector button.active {
+  background: #B27A17;
+  color: white;
+}
+
+.feedback-type-selector button:not(:last-child) {
+  border-right: 1px solid var(--border-color);
+}
+
+.star-rating-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 0.25rem 0;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0.25rem;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.star-btn:hover {
+  transform: scale(1.2);
+}
+
+.star-btn.active {
+  color: var(--color-gold);
+}
+
+body.mode-light .star-btn.active {
+  color: #B27A17;
+}
+
+.feedback-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.875rem;
+  padding: 0.75rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  resize: vertical;
+}
+
+.feedback-textarea:focus {
+  border-color: var(--color-gold);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+}
+
+body.mode-light .feedback-textarea:focus {
+  border-color: #B27A17;
+  box-shadow: 0 0 0 2px rgba(178, 122, 23, 0.15);
+}
+
+.feedback-form {
+  gap: 1rem !important;
+}
+
+.feedback-actions {
+  margin-top: 0.25rem !important;
+}
