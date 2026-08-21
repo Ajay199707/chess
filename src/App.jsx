@@ -367,6 +367,10 @@ export default function App() {
       }
     });
 
+    newSocket.on('global_chat_message', (msg) => {
+      setGlobalMessages(prev => [...prev, msg].slice(-100));
+    });
+
     newSocket.on('challenge_received', (challenge) => {
       setActiveChallengeRequest(challenge);
     });
@@ -517,6 +521,8 @@ export default function App() {
       }
       
       const botPlaysWhite = activeColor === 'white';
+      setPlayerColor(botPlaysWhite ? 'black' : 'white');
+
       if (botPlaysWhite) {
         showToast("Bot thinking...");
         botTimeoutRef.current = setTimeout(() => {
@@ -531,6 +537,8 @@ export default function App() {
           }
         }, 600);
       }
+    } else if (mode === 'local-2p') {
+      setPlayerColor(null);
     }
   };
 
@@ -850,14 +858,9 @@ export default function App() {
       showToast("Restart request declined by opponent.");
     };
 
-    const handleGlobalChatMessage = (msg) => {
-      setGlobalMessages(prev => [...prev, msg].slice(-100));
-    };
-
     socket.on('role_assigned', handleRoleAssigned);
     socket.on('room_update', handleRoomUpdate);
     socket.on('chat_message', handleChatMessage);
-    socket.on('global_chat_message', handleGlobalChatMessage);
     socket.on('draw_offered', handleDrawOffered);
     socket.on('draw_declined', handleDrawDeclined);
     socket.on('undo_requested', handleUndoRequested);
@@ -870,7 +873,6 @@ export default function App() {
       socket.off('role_assigned', handleRoleAssigned);
       socket.off('room_update', handleRoomUpdate);
       socket.off('chat_message', handleChatMessage);
-      socket.off('global_chat_message', handleGlobalChatMessage);
       socket.off('draw_offered', handleDrawOffered);
       socket.off('draw_declined', handleDrawDeclined);
       socket.off('undo_requested', handleUndoRequested);
