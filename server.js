@@ -4,6 +4,10 @@ import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Chess } from 'chess.js';
+import * as db from './server/database.js';
+
+const onlineUsers = new Map(); // socket.id -> { name, email, elo, status: 'lobby' | 'playing' }
+const activeChallenges = new Map(); // challengeId -> { challengerEmail, targetEmail, timeControl, challengerSocketId }
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,10 +64,9 @@ function handleTimeout(roomId, color) {
   const room = rooms.get(roomId);
   if (!room || room.gameState.status !== 'playing') return;
 
-  room.gameState.status = 'timeout';
-  room.gameState.winner = color === 'white' ? 'black' : 'white';
   room.gameState.clocks[color] = 0;
-
+  const winner = color === 'white' ? 'black' : 'white';
+  endGameAndSaveStats(room, 'timeout', winner);
   io.to(roomId).emit('room_update', getCleanRoomState(room));
 }
 
@@ -99,10 +102,199 @@ function getCleanRoomState(room) {
   };
 }
 
+function broadcastOnlineUsers() {
+  const usersList = [];
+  onlineUsers.forEach((u) => {
+    usersList.push({
+      name: u.name,
+      email: u.email,
+      elo: u.elo,
+      status: u.status
+    });
+  });
+
+  const uniqueUsers = [];
+  const seenEmails = new Set();
+  for (const user of usersList) {
+    if (!seenEmails.has(user.email)) {
+      seenEmails.add(user.email);
+      uniqueUsers.push(user);
+    }
+  }
+
+  io.emit('online_users_update', {
+    users: uniqueUsers,
+    totalOnline: uniqueUsers.length
+  });
+}
+
+function endGameAndSaveStats(room, status, winner) {
+  room.gameState.status = status;
+  room.gameState.winner = winner;
+
+  const existingTimeout = roomTimeouts.get(room.id);
+  if (existingTimeout) clearTimeout(existingTimeout);
+
+  const whiteSocketId = room.players.white?.socketId;
+  const blackSocketId = room.players.black?.socketId;
+  const whiteUser = onlineUsers.get(whiteSocketId);
+  const blackUser = onlineUsers.get(blackSocketId);
+
+  if (whiteUser && blackUser) {
+    let whiteOutcome = 'draw';
+    let blackOutcome = 'draw';
+    if (winner === 'white') {
+      whiteOutcome = 'win';
+      blackOutcome = 'loss';
+    } else if (winner === 'black') {
+      whiteOutcome = 'loss';
+      blackOutcome = 'win';
+    }
+
+    const whiteRes = db.recordMatchComplete(whiteUser.email, blackUser.email, whiteOutcome);
+    const blackRes = db.recordMatchComplete(blackUser.email, whiteUser.email, blackOutcome);
+
+    if (whiteRes) whiteUser.elo = whiteRes.newElo;
+    if (blackRes) blackUser.elo = blackRes.newElo;
+
+    io.to(whiteSocketId).emit('stats_update', { elo: whiteUser.elo });
+    io.to(blackSocketId).emit('stats_update', { elo: blackUser.elo });
+  }
+
+  if (whiteUser) whiteUser.status = 'lobby';
+  if (blackUser) blackUser.status = 'lobby';
+  broadcastOnlineUsers();
+}
+
 io.on('connection', (socket) => {
   let currentRoomId = null;
   let currentPlayerColor = null; // 'white', 'black', or null (spectator)
   let currentPlayerName = '';
+  let loggedInEmail = null;
+
+  // --- ACCOUNT AUTHENTICATION HANDLERS ---
+  socket.on('register', ({ name, email, password }) => {
+    const res = db.registerUser(name, email, password);
+    if (res.success) {
+      loggedInEmail = res.email;
+      onlineUsers.set(socket.id, {
+        name: res.name,
+        email: res.email,
+        elo: res.stats.elo,
+        status: 'lobby'
+      });
+      broadcastOnlineUsers();
+    }
+    socket.emit('auth_response', res);
+  });
+
+  socket.on('login', ({ email, password }) => {
+    const res = db.loginUser(email, password);
+    if (res.success) {
+      loggedInEmail = res.email;
+      onlineUsers.set(socket.id, {
+        name: res.name,
+        email: res.email,
+        elo: res.stats.elo,
+        status: 'lobby'
+      });
+      broadcastOnlineUsers();
+    }
+    socket.emit('auth_response', res);
+  });
+
+  socket.on('verify_session', ({ email, token }) => {
+    const res = db.verifySession(email, token);
+    if (res.success) {
+      loggedInEmail = res.email;
+      onlineUsers.set(socket.id, {
+        name: res.name,
+        email: res.email,
+        elo: res.stats.elo,
+        status: 'lobby'
+      });
+      broadcastOnlineUsers();
+    }
+    socket.emit('session_verified', res);
+  });
+
+  socket.on('logout', ({ email, token }) => {
+    db.logoutUser(email, token);
+    onlineUsers.delete(socket.id);
+    loggedInEmail = null;
+    broadcastOnlineUsers();
+    socket.emit('logged_out');
+  });
+
+  socket.on('enter_lobby', () => {
+    const user = onlineUsers.get(socket.id);
+    if (user) {
+      user.status = 'lobby';
+      broadcastOnlineUsers();
+    }
+  });
+
+  // --- DIRECT PLAY CHALLENGES ---
+  socket.on('send_challenge', ({ targetEmail, timeControl }) => {
+    const challenger = onlineUsers.get(socket.id);
+    if (!challenger) return;
+
+    // Find recipient's active socket
+    let targetSocketId = null;
+    onlineUsers.forEach((user, sId) => {
+      if (user.email === targetEmail.toLowerCase().trim()) {
+        targetSocketId = sId;
+      }
+    });
+
+    if (!targetSocketId) {
+      socket.emit('challenge_failed', { message: "Player is no longer online." });
+      return;
+    }
+
+    const challengeId = crypto.randomBytes(8).toString('hex');
+    activeChallenges.set(challengeId, {
+      challengerEmail: challenger.email,
+      targetEmail: targetEmail.toLowerCase().trim(),
+      timeControl,
+      challengerSocketId: socket.id
+    });
+
+    io.to(targetSocketId).emit('challenge_received', {
+      challengerName: challenger.name,
+      challengerEmail: challenger.email,
+      timeControl,
+      challengeId
+    });
+  });
+
+  socket.on('respond_challenge', ({ challengeId, accept }) => {
+    const challenge = activeChallenges.get(challengeId);
+    if (!challenge) {
+      socket.emit('challenge_error', { message: "Challenge expired or invalid." });
+      return;
+    }
+
+    if (accept) {
+      // Create new match room code
+      const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      // Update statuses to playing
+      const challengerUser = onlineUsers.get(challenge.challengerSocketId);
+      const targetUser = onlineUsers.get(socket.id);
+      if (challengerUser) challengerUser.status = 'playing';
+      if (targetUser) targetUser.status = 'playing';
+      broadcastOnlineUsers();
+
+      // Notify both players to join the new room
+      io.to(challenge.challengerSocketId).emit('challenge_accepted', { roomId, timeControl: challenge.timeControl });
+      socket.emit('challenge_accepted', { roomId, timeControl: challenge.timeControl });
+    } else {
+      io.to(challenge.challengerSocketId).emit('challenge_declined', { message: "Your challenge was declined." });
+    }
+
+    activeChallenges.delete(challengeId);
+  });
 
   // Join or Create a room
   socket.on('join_room', ({ roomId, name, timeControl }) => {
@@ -285,6 +477,12 @@ io.on('connection', (socket) => {
     room.gameState.status = 'playing';
     room.gameState.clocks.lastActive = Date.now();
 
+    const whiteUser = onlineUsers.get(room.players.white?.socketId);
+    const blackUser = onlineUsers.get(room.players.black?.socketId);
+    if (whiteUser) whiteUser.status = 'playing';
+    if (blackUser) blackUser.status = 'playing';
+    broadcastOnlineUsers();
+
     if (room.gameState.timeControl !== 'casual') {
       scheduleTimeout(currentRoomId, 'white', room.gameState.clocks.white);
     }
@@ -345,14 +543,11 @@ io.on('connection', (socket) => {
       isGameOver = tempGame.isGameOver();
       if (isGameOver) {
         if (tempGame.isCheckmate()) {
-          room.gameState.status = 'checkmate';
-          room.gameState.winner = tempGame.turn() === 'w' ? 'black' : 'white';
+          const winner = tempGame.turn() === 'w' ? 'black' : 'white';
+          endGameAndSaveStats(room, 'checkmate', winner);
         } else {
-          room.gameState.status = 'draw';
+          endGameAndSaveStats(room, 'draw', null);
         }
-        // Cancel timers
-        const existingTimeout = roomTimeouts.get(currentRoomId);
-        if (existingTimeout) clearTimeout(existingTimeout);
       }
     } catch (e) {
       console.error("Error checking game over state on server:", e);
@@ -400,12 +595,8 @@ io.on('connection', (socket) => {
 
     if (!role) return;
 
-    room.gameState.status = 'abandoned';
-    room.gameState.winner = role === 'white' ? 'black' : 'white';
-
-    // Clear timeout
-    const existingTimeout = roomTimeouts.get(currentRoomId);
-    if (existingTimeout) clearTimeout(existingTimeout);
+    const winner = role === 'white' ? 'black' : 'white';
+    endGameAndSaveStats(room, 'abandoned', winner);
 
     io.to(currentRoomId).emit('room_update', getCleanRoomState(room));
     io.to(currentRoomId).emit('chat_message', {
@@ -434,9 +625,7 @@ io.on('connection', (socket) => {
     if (!room || room.gameState.status !== 'playing') return;
 
     if (accept) {
-      room.gameState.status = 'draw';
-      const existingTimeout = roomTimeouts.get(currentRoomId);
-      if (existingTimeout) clearTimeout(existingTimeout);
+      endGameAndSaveStats(room, 'draw', null);
 
       io.to(currentRoomId).emit('room_update', getCleanRoomState(room));
       io.to(currentRoomId).emit('chat_message', {
@@ -551,6 +740,9 @@ io.on('connection', (socket) => {
 
   // Handle disconnection
   socket.on('disconnect', () => {
+    onlineUsers.delete(socket.id);
+    broadcastOnlineUsers();
+
     if (!currentRoomId) return;
 
     const room = rooms.get(currentRoomId);
@@ -573,8 +765,7 @@ io.on('connection', (socket) => {
       room.cleanupTimeout = setTimeout(() => {
         const r = rooms.get(currentRoomId);
         if (r && r.players.white && !r.players.white.connected) {
-          r.gameState.status = 'abandoned';
-          r.gameState.winner = 'black';
+          endGameAndSaveStats(r, 'abandoned', 'black');
           io.to(currentRoomId).emit('room_update', getCleanRoomState(r));
           cleanRoom(currentRoomId);
         }
@@ -593,8 +784,7 @@ io.on('connection', (socket) => {
       room.cleanupTimeout = setTimeout(() => {
         const r = rooms.get(currentRoomId);
         if (r && r.players.black && !r.players.black.connected) {
-          r.gameState.status = 'abandoned';
-          r.gameState.winner = 'white';
+          endGameAndSaveStats(r, 'abandoned', 'white');
           io.to(currentRoomId).emit('room_update', getCleanRoomState(r));
           cleanRoom(currentRoomId);
         }

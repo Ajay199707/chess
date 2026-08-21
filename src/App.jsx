@@ -10,6 +10,8 @@ import {
 import { Chessboard } from './components/Chessboard';
 import { ChatPanel } from './components/ChatPanel';
 import { Guidelines } from './components/Guidelines';
+import { LoginScreen } from './components/LoginScreen';
+import { OnlinePlayersPanel } from './components/OnlinePlayersPanel';
 import { getBestMove } from './utils/chessAI';
 import { playSound } from './utils/audio';
 
@@ -53,6 +55,14 @@ export default function App() {
   const [isCapturesOpen, setIsCapturesOpen] = useState(false);
   const [showFloatingCaptures, setShowFloatingCaptures] = useState(() => safeGetItem('chess_show_floating_captures', 'true') === 'true');
   const [activeTab, setActiveTab] = useState('game'); // 'game', 'chat', 'moves', 'stats'
+
+  // --- USER AUTHENTICATION STATES ---
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userProfile, setUserProfile] = useState(null); // { name, email, stats: { gamesPlayed, onlineMatchesPlayed, elo } }
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [activeChallengeRequest, setActiveChallengeRequest] = useState(null); // { challengerName, challengerEmail, timeControl, challengeId }
+  const userToken = safeGetItem('chess_user_token', null);
+  const userEmail = safeGetItem('chess_user_email', null);
 
   // --- GAME & LOGIC STATE ---
   const [game, setGame] = useState(() => new Chess());
@@ -320,6 +330,120 @@ export default function App() {
     }, 4000);
   };
 
+  // --- PERSISTENT SOCKET CONNECTION & AUTHENTICATION EFFECT ---
+  useEffect(() => {
+    const BACKEND_PROD_URL = "https://chess-smdm.onrender.com"; 
+    const isDev = window.location.port && window.location.port !== '3001';
+    const socketUrl = isDev 
+      ? `${window.location.protocol}//${window.location.hostname}:3001` 
+      : (BACKEND_PROD_URL !== "YOUR_RENDER_BACKEND_URL" ? BACKEND_PROD_URL : window.location.origin);
+
+    const newSocket = io(socketUrl);
+    socketRef.current = newSocket;
+    setSocket(newSocket);
+
+    newSocket.on('connect', () => {
+      const savedEmail = safeGetItem('chess_user_email', null);
+      const savedToken = safeGetItem('chess_user_token', null);
+      if (savedEmail && savedToken) {
+        newSocket.emit('verify_session', { email: savedEmail, token: savedToken });
+      }
+    });
+
+    newSocket.on('online_users_update', ({ users }) => {
+      setOnlineUsers(users);
+    });
+
+    newSocket.on('challenge_received', (challenge) => {
+      setActiveChallengeRequest(challenge);
+    });
+
+    newSocket.on('challenge_accepted', ({ roomId, timeControl: tc }) => {
+      setRoomCode(roomId);
+      setGameMode('online-2p');
+      setTimeControl(tc);
+      setChatHistory([]);
+      setGameStatus('waiting');
+      setWinner(null);
+      setGame(new Chess());
+    });
+
+    newSocket.on('challenge_declined', ({ message }) => {
+      showToast(message || "Challenge was declined.");
+    });
+
+    newSocket.on('challenge_failed', ({ message }) => {
+      showToast(message || "Failed to challenge player.");
+    });
+
+    newSocket.on('session_verified', (res) => {
+      if (res.success) {
+        setIsAuthenticated(true);
+        setUserProfile({ name: res.name, email: res.email, stats: res.stats });
+      } else {
+        safeRemoveItem('chess_user_token');
+        safeRemoveItem('chess_user_email');
+      }
+    });
+
+    newSocket.on('auth_response', (res) => {
+      if (res.success) {
+        safeSetItem('chess_user_token', res.token);
+        safeSetItem('chess_user_email', res.email);
+        setIsAuthenticated(true);
+        setUserProfile({ name: res.name, email: res.email, stats: res.stats });
+      }
+    });
+
+    newSocket.on('logged_out', () => {
+      setIsAuthenticated(false);
+      setUserProfile(null);
+      safeRemoveItem('chess_user_token');
+      safeRemoveItem('chess_user_email');
+    });
+
+    newSocket.on('stats_update', ({ elo }) => {
+      setUserProfile(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          stats: {
+            ...prev.stats,
+            elo,
+            gamesPlayed: prev.stats.gamesPlayed + 1,
+            onlineMatchesPlayed: prev.stats.onlineMatchesPlayed + 1
+          }
+        };
+      });
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  const handleAuthSuccess = (profile, token) => {
+    safeSetItem('chess_user_token', token);
+    safeSetItem('chess_user_email', profile.email);
+    setIsAuthenticated(true);
+    setUserProfile(profile);
+  };
+
+  const handleLogout = () => {
+    if (socket) {
+      socket.emit('logout', { email: userProfile?.email, token: userToken });
+    }
+  };
+
+  const handleSendChallenge = (targetEmail, timeControlValue) => {
+    if (socket) {
+      socket.emit('send_challenge', { targetEmail, timeControl: timeControlValue });
+      showToast(`Challenge sent to ${targetEmail}`);
+    }
+  };
+
   // --- GAME INITIALIZATION ---
   const startNewLocalOrBotGame = (mode, selectedDiff = difficulty, selectedBotCol = botColor, tc = timeControl) => {
     // Clear timeouts
@@ -523,7 +647,11 @@ export default function App() {
   const handleCreateOnlineRoom = () => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     setRoomCode(code);
-    initSocketConnection(code);
+    setGameMode('online-2p');
+    setChatHistory([]);
+    setGameStatus('waiting');
+    setWinner(null);
+    setGame(new Chess());
   };
 
   const handleJoinOnlineRoom = (code = joinCodeInput) => {
@@ -533,7 +661,11 @@ export default function App() {
     }
     const cleanCode = code.trim().toUpperCase();
     setRoomCode(cleanCode);
-    initSocketConnection(cleanCode);
+    setGameMode('online-2p');
+    setChatHistory([]);
+    setGameStatus('waiting');
+    setWinner(null);
+    setGame(new Chess());
   };
 
   const handleSwapColors = () => {
@@ -552,39 +684,17 @@ export default function App() {
     if (socket) socket.emit('start_game');
   };
 
-  const initSocketConnection = (roomCodeStr) => {
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-    }
+  // --- ROOM-SPECIFIC SOCKET EVENT LISTENERS ---
+  useEffect(() => {
+    if (!socket || !roomCode || gameMode !== 'online-2p') return;
 
-    // If we're on a dev server port (e.g. 5173), connect directly to the Express server on port 3001.
-    // Otherwise, connect to the custom hosted production backend URL (e.g. on Render).
-    // REPLACE "YOUR_RENDER_BACKEND_URL" below with your live Render URL once hosted!
-    const BACKEND_PROD_URL = "https://chess-smdm.onrender.com"; 
-
-    const isDev = window.location.port && window.location.port !== '3001';
-    const socketUrl = isDev 
-      ? `${window.location.protocol}//${window.location.hostname}:3001` 
-      : (BACKEND_PROD_URL !== "YOUR_RENDER_BACKEND_URL" ? BACKEND_PROD_URL : window.location.origin);
-
-    const newSocket = io(socketUrl);
-    socketRef.current = newSocket;
-
-    setSocket(newSocket);
-    setChatHistory([]);
-    setGameStatus('waiting');
-    setWinner(null);
-    setGame(new Chess());
-
-    newSocket.on('connect', () => {
-      newSocket.emit('join_room', {
-        roomId: roomCodeStr,
-        name: playerName,
-        timeControl: timeControl
-      });
+    socket.emit('join_room', {
+      roomId: roomCode,
+      name: userProfile?.name || playerName,
+      timeControl: timeControl
     });
 
-    newSocket.on('role_assigned', ({ color, isSpectator: spectatorFlag }) => {
+    const handleRoleAssigned = ({ color, isSpectator: spectatorFlag }) => {
       setPlayerColor(color);
       setIsSpectator(spectatorFlag);
       if (spectatorFlag) {
@@ -592,9 +702,9 @@ export default function App() {
       } else {
         showToast(`You are playing as ${color.toUpperCase()}`);
       }
-    });
+    };
 
-    newSocket.on('room_update', (updatedRoomState) => {
+    const handleRoomUpdate = (updatedRoomState) => {
       setRoomState(updatedRoomState);
       
       const newGameInstance = new Chess();
@@ -620,22 +730,16 @@ export default function App() {
 
       // Sync last move highlight and play opponent move sound cues
       if (updatedRoomState.gameState.lastMove) {
-        const hasFenChanged = updatedRoomState.gameState.fen !== game.fen();
         const isMyTurn = newGameInstance.turn() === (playerColor === 'white' ? 'w' : 'b');
-        
-        if (hasFenChanged && isMyTurn) {
-          const isCheck = newGameInstance.inCheck();
-          // Check if piece was captured by checking target square existence in previous game state or looking at the last move details
-          const isCapture = updatedRoomState.gameState.lastMove.flags?.includes('c') || 
-                            game.get(updatedRoomState.gameState.lastMove.to) !== null;
+        const isCheck = newGameInstance.inCheck();
+        const isCapture = updatedRoomState.gameState.lastMove.flags?.includes('c');
 
-          if (isCheck) {
-            triggerSound('check');
-          } else if (isCapture) {
-            triggerSound('capture');
-          } else {
-            triggerSound('move');
-          }
+        if (isCheck) {
+          triggerSound('check');
+        } else if (isCapture) {
+          triggerSound('capture');
+        } else {
+          triggerSound('move');
         }
         setLastMove(updatedRoomState.gameState.lastMove);
       } else {
@@ -652,53 +756,82 @@ export default function App() {
         triggerSound('gameover');
         updateScores(updatedRoomState.gameState.winner || 'draw', updatedRoomState.gameState.status);
       }
-    });
+    };
 
-    newSocket.on('chat_message', (chatMsg) => {
+    const handleChatMessage = (chatMsg) => {
       setChatHistory(prev => [...prev, chatMsg]);
-      // Trigger sound on incoming chat reaction
       if (chatMsg.isReaction) {
         triggerSound('capture');
       }
-    });
+    };
 
-    newSocket.on('draw_offered', ({ from }) => {
+    const handleDrawOffered = ({ from }) => {
       if (from !== playerColor) {
         setDrawOfferPending(from);
       }
-    });
+    };
 
-    newSocket.on('draw_declined', () => {
+    const handleDrawDeclined = () => {
       showToast("Draw offer declined by opponent.");
-    });
+    };
 
-    newSocket.on('undo_requested', ({ from }) => {
+    const handleUndoRequested = ({ from }) => {
       if (from !== playerColor) {
         setUndoRequestPending(from);
       }
-    });
+    };
 
-    newSocket.on('undo_declined', () => {
+    const handleUndoDeclined = () => {
       showToast("Undo request declined by opponent.");
-    });
+    };
 
-    newSocket.on('undo_accepted', () => {
+    const handleUndoAccepted = () => {
       setLastMove(null);
       setGameStatus('playing');
       showToast("Move undone.");
-    });
+    };
 
-    newSocket.on('restart_offered', ({ from }) => {
+    const handleRestartOffered = ({ from }) => {
       if (from !== playerColor) {
         setRestartOfferPending(from);
       }
-    });
+    };
 
-    newSocket.on('restart_declined', () => {
+    const handleRestartDeclined = () => {
       setRematchRequestSent(false);
       showToast("Restart request declined by opponent.");
-    });
-  };
+    };
+
+    socket.on('role_assigned', handleRoleAssigned);
+    socket.on('room_update', handleRoomUpdate);
+    socket.on('chat_message', handleChatMessage);
+    socket.on('draw_offered', handleDrawOffered);
+    socket.on('draw_declined', handleDrawDeclined);
+    socket.on('undo_requested', handleUndoRequested);
+    socket.on('undo_declined', handleUndoDeclined);
+    socket.on('undo_accepted', handleUndoAccepted);
+    socket.on('restart_offered', handleRestartOffered);
+    socket.on('restart_declined', handleRestartDeclined);
+
+    return () => {
+      socket.off('role_assigned', handleRoleAssigned);
+      socket.off('room_update', handleRoomUpdate);
+      socket.off('chat_message', handleChatMessage);
+      socket.off('draw_offered', handleDrawOffered);
+      socket.off('draw_declined', handleDrawDeclined);
+      socket.off('undo_requested', handleUndoRequested);
+      socket.off('undo_declined', handleUndoDeclined);
+      socket.off('undo_accepted', handleUndoAccepted);
+      socket.off('restart_offered', handleRestartOffered);
+      socket.off('restart_declined', handleRestartDeclined);
+
+      setRoomState(null);
+      setPlayerColor(null);
+      setIsSpectator(false);
+      setLastMove(null);
+      socket.emit('enter_lobby');
+    };
+  }, [socket, roomCode, gameMode, playerColor, timeControl, userProfile]);
 
   const handleOnlineMove = (moveDetails) => {
     if (!socket || isSpectator || gameStatus !== 'playing') return;
@@ -987,12 +1120,60 @@ export default function App() {
   };
 
   // --- RENDER FUNCTIONS ---
+  if (!isAuthenticated) {
+    return (
+      <div className={`app-root theme-${boardTheme} ${isDarkMode ? 'mode-dark' : 'mode-light'}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        {toastMessage && (
+          <div className="toast-alert animate-slide-up">
+            {toastMessage}
+          </div>
+        )}
+        <LoginScreen socket={socket} onAuthSuccess={handleAuthSuccess} />
+      </div>
+    );
+  }
+
   return (
     <div className={`app-root theme-${boardTheme} ${isDarkMode ? 'mode-dark' : 'mode-light'}`}>
       {/* Toast Alert */}
       {toastMessage && (
         <div className="toast-alert animate-slide-up">
           {toastMessage}
+        </div>
+      )}
+
+      {/* Challenge Request Invitation Overlay Modal */}
+      {activeChallengeRequest && (
+        <div className="challenge-request-overlay">
+          <div className="challenge-card animate-scale-in">
+            <div className="challenge-header">
+              <span className="challenge-icon">⚔️</span>
+              <h4>Challenge Received!</h4>
+            </div>
+            <p>
+              <strong>{activeChallengeRequest.challengerName}</strong> has challenged you to a <strong>{activeChallengeRequest.timeControl.toUpperCase()}</strong> match!
+            </p>
+            <div className="challenge-actions">
+              <button 
+                className="btn-primary" 
+                onClick={() => {
+                  socket.emit('respond_challenge', { challengeId: activeChallengeRequest.challengeId, accept: true });
+                  setActiveChallengeRequest(null);
+                }}
+              >
+                Accept Challenge
+              </button>
+              <button 
+                className="btn-danger" 
+                onClick={() => {
+                  socket.emit('respond_challenge', { challengeId: activeChallengeRequest.challengeId, accept: false });
+                  setActiveChallengeRequest(null);
+                }}
+              >
+                Decline
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1004,191 +1185,192 @@ export default function App() {
         
         {/* --- MENU SCREEN --- */}
         {gameMode === 'menu' && (
-          <div className="menu-card animate-fade-in">
-            <header className="menu-header">
-              <h1>👑 Apex Chess</h1>
-              <p>Experience clean, premium chess with real-time multiplayer and chess bot intelligence.</p>
-            </header>
+          <div className="menu-screen-layout">
+            <div className="menu-card animate-fade-in">
+              <header className="menu-header">
+                <h1>👑 Apex Chess</h1>
+                <p className="welcome-greeting">👋 Welcome, {userProfile?.name}! Let's build our strategic mind!</p>
+              </header>
 
-            {/* Profile Entry */}
-            <div className="menu-profile-input">
-              <label htmlFor="name-input">Enter Player Name:</label>
-              <div className="input-group">
-                <Settings size={18} className="input-icon" />
-                <input
-                  id="name-input"
-                  type="text"
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value.substring(0, 15))}
-                  placeholder="Grandmaster"
-                  maxLength={15}
-                />
-              </div>
-            </div>
+              <div className="menu-grid">
+                {/* vs Bot Card */}
+                <div className="mode-card">
+                  <div className="mode-icon-wrapper">
+                    <Play size={24} className="text-gold" />
+                  </div>
+                  <h3>1 Player vs Bot</h3>
+                  <p>Sharpen your tactical skills against our adaptive minimax search engine.</p>
+                  
+                  <div className="mode-settings">
+                    <div className="setting-row">
+                      <span>Difficulty:</span>
+                      <div className="btn-segmented">
+                        {['easy', 'medium', 'hard'].map(d => (
+                          <button
+                            key={d}
+                            className={difficulty === d ? 'active' : ''}
+                            onClick={() => setDifficulty(d)}
+                          >
+                            {d.toUpperCase()}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-            <div className="menu-grid">
-              {/* vs Bot Card */}
-              <div className="mode-card">
-                <div className="mode-icon-wrapper">
-                  <Play size={24} className="text-gold" />
-                </div>
-                <h3>1 Player vs Bot</h3>
-                <p>Sharpen your tactical skills against our adaptive minimax search engine.</p>
-                
-                <div className="mode-settings">
-                  <div className="setting-row">
-                    <span>Difficulty:</span>
-                    <div className="btn-segmented">
-                      {['easy', 'medium', 'hard'].map(d => (
-                        <button
-                          key={d}
-                          className={difficulty === d ? 'active' : ''}
-                          onClick={() => setDifficulty(d)}
-                        >
-                          {d.toUpperCase()}
-                        </button>
-                      ))}
+                    <div className="setting-row">
+                      <span>Bot Color:</span>
+                      <div className="btn-segmented">
+                        {[
+                          { val: 'white', label: 'WHITE' },
+                          { val: 'black', label: 'BLACK' },
+                          { val: 'random', label: 'RANDOM' }
+                        ].map(c => (
+                          <button
+                            key={c.val}
+                            className={botColor === c.val ? 'active' : ''}
+                            onClick={() => setBotColor(c.val)}
+                          >
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="setting-row">
-                    <span>Play As:</span>
-                    <div className="btn-segmented">
-                      {[
-                        { key: 'white', label: 'WHITE' },
-                        { key: 'random', label: 'RAND' },
-                        { key: 'black', label: 'BLACK' }
-                      ].map(color => (
-                        <button
-                          key={color.key}
-                          className={botColor === color.key ? 'active' : ''}
-                          onClick={() => setBotColor(color.key)}
-                        >
-                          {color.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <button 
-                  className="btn-primary full-width"
-                  onClick={() => {
-                    setGameMode('vs-bot');
-                    startNewLocalOrBotGame('vs-bot');
-                  }}
-                >
-                  Start Battle
-                </button>
-              </div>
-
-              {/* Multiplayer / Local & Online Card */}
-              <div className="mode-card">
-                <div className="mode-icon-wrapper">
-                  <Users size={24} className="text-emerald" />
-                </div>
-                <h3>2 Players</h3>
-                <p>Play locally with pass-and-play, or create real-time online rooms for matchmaking.</p>
-
-                <div className="time-setting">
-                  <span>Time Control:</span>
-                  <select 
-                    value={timeControl} 
-                    onChange={(e) => setTimeControl(e.target.value)}
-                    className="select-dropdown"
-                    aria-label="Select match time control"
-                  >
-                    <option value="casual">Casual (No Timer)</option>
-                    <option value="bullet">Bullet (1 Min)</option>
-                    <option value="blitz3">Blitz (3 Min)</option>
-                    <option value="blitz5">Blitz (5 Min)</option>
-                    <option value="rapid10">Rapid (10 Min)</option>
-                    <option value="rapid30">Rapid (30 Min)</option>
-                  </select>
-                </div>
-
-                <div className="multiplayer-options">
-                  {/* Local 2P */}
                   <button 
-                    className="btn-secondary"
+                    className="btn-primary full-width"
                     onClick={() => {
-                      setGameMode('local-2p');
-                      startNewLocalOrBotGame('local-2p');
+                      setGameMode('vs-bot');
+                      startNewLocalOrBotGame('vs-bot');
                     }}
                   >
-                    Play Pass & Play (Local)
+                    Start Battle
                   </button>
+                </div>
 
-                  <div className="divider-label">
-                    <span>OR ONLINE MULTIPLAYER</span>
+                {/* Multiplayer / Local & Online Card */}
+                <div className="mode-card">
+                  <div className="mode-icon-wrapper">
+                    <Users size={24} className="text-emerald" />
+                  </div>
+                  <h3>2 Players</h3>
+                  <p>Play locally with pass-and-play, or create real-time online rooms for matchmaking.</p>
+
+                  <div className="time-setting">
+                    <span>Time Control:</span>
+                    <select 
+                      value={timeControl} 
+                      onChange={(e) => setTimeControl(e.target.value)}
+                      className="select-dropdown"
+                      aria-label="Select match time control"
+                    >
+                      <option value="casual">Casual (No Timer)</option>
+                      <option value="bullet">Bullet (1 Min)</option>
+                      <option value="blitz3">Blitz (3 Min)</option>
+                      <option value="blitz5">Blitz (5 Min)</option>
+                      <option value="rapid10">Rapid (10 Min)</option>
+                      <option value="rapid30">Rapid (30 Min)</option>
+                    </select>
                   </div>
 
-                  {/* Host Online */}
-                  <button 
-                    className="btn-outline-gold"
-                    onClick={() => {
-                      setGameMode('online-2p');
-                      handleCreateOnlineRoom();
-                    }}
-                  >
-                    Host Online Room
-                  </button>
-
-                  {/* Join Room */}
-                  <div className="join-group">
-                    <input
-                      type="text"
-                      placeholder="ENTER ROOM CODE"
-                      value={joinCodeInput}
-                      onChange={(e) => setJoinCodeInput(e.target.value.substring(0, 6))}
-                      maxLength={6}
-                    />
+                  <div className="multiplayer-options">
+                    {/* Local 2P */}
                     <button 
-                      className="btn-primary inline-btn"
+                      className="btn-secondary"
+                      onClick={() => {
+                        setGameMode('local-2p');
+                        startNewLocalOrBotGame('local-2p');
+                      }}
+                    >
+                      Play Pass & Play (Local)
+                    </button>
+
+                    <div className="divider-label">
+                      <span>OR ONLINE MULTIPLAYER</span>
+                    </div>
+
+                    {/* Host Online */}
+                    <button 
+                      className="btn-outline-gold"
                       onClick={() => {
                         setGameMode('online-2p');
-                        handleJoinOnlineRoom();
+                        handleCreateOnlineRoom();
                       }}
-                      disabled={!joinCodeInput.trim()}
                     >
-                      Join
+                      Host Online Room
                     </button>
+
+                    {/* Join Room */}
+                    <div className="join-group">
+                      <input
+                        type="text"
+                        placeholder="ENTER ROOM CODE"
+                        value={joinCodeInput}
+                        onChange={(e) => setJoinCodeInput(e.target.value.substring(0, 6))}
+                        maxLength={6}
+                      />
+                      <button 
+                        className="btn-primary inline-btn"
+                        onClick={() => {
+                          setGameMode('online-2p');
+                          handleJoinOnlineRoom();
+                        }}
+                        disabled={!joinCodeInput.trim()}
+                      >
+                        Join
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              <footer className="menu-footer-actions">
+                <button className="btn-text" onClick={() => setIsGuidelinesOpen(true)}>
+                  <BookOpen size={16} /> How to Play Rules
+                </button>
+                <button 
+                  className="btn-text" 
+                  onClick={() => {
+                    setSoundEnabled(!soundEnabled);
+                    triggerSound('move');
+                  }}
+                >
+                  {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                  {soundEnabled ? "Mute Sounds" : "Unmute Sounds"}
+                </button>
+                <button 
+                  className="btn-text" 
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  title={isDarkMode ? "Switch to Day Mode" : "Switch to Night Mode"}
+                >
+                  {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+                  {isDarkMode ? "Day Mode" : "Night Mode"}
+                </button>
+                <button 
+                  className="btn-text" 
+                  onClick={() => setShowFloatingCaptures(!showFloatingCaptures)}
+                  title={showFloatingCaptures ? "Hide Floating Captures Bag" : "Show Floating Captures Bag"}
+                >
+                  <Coins size={16} />
+                  {showFloatingCaptures ? "Hide Captures Bag" : "Show Captures Bag"}
+                </button>
+                <button 
+                  className="btn-text btn-logout" 
+                  onClick={handleLogout}
+                  title="Logout Account"
+                >
+                  <LogOut size={16} /> Logout
+                </button>
+              </footer>
             </div>
 
-            <footer className="menu-footer-actions">
-              <button className="btn-text" onClick={() => setIsGuidelinesOpen(true)}>
-                <BookOpen size={16} /> How to Play Rules
-              </button>
-              <button 
-                className="btn-text" 
-                onClick={() => {
-                  setSoundEnabled(!soundEnabled);
-                  triggerSound('move');
-                }}
-              >
-                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                {soundEnabled ? "Mute Sounds" : "Unmute Sounds"}
-              </button>
-              <button 
-                className="btn-text" 
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                title={isDarkMode ? "Switch to Day Mode" : "Switch to Night Mode"}
-              >
-                {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-                {isDarkMode ? "Day Mode" : "Night Mode"}
-              </button>
-              <button 
-                className="btn-text" 
-                onClick={() => setShowFloatingCaptures(!showFloatingCaptures)}
-                title={showFloatingCaptures ? "Hide Floating Captures Bag" : "Show Floating Captures Bag"}
-              >
-                <Coins size={16} />
-                {showFloatingCaptures ? "Hide Captures Bag" : "Show Captures Bag"}
-              </button>
-            </footer>
+            <div className="menu-lobby-sidebar">
+              <OnlinePlayersPanel
+                onlineUsers={onlineUsers}
+                currentUserEmail={userProfile?.email}
+                onSendChallenge={handleSendChallenge}
+              />
+            </div>
           </div>
         )}
 
@@ -1663,6 +1845,15 @@ export default function App() {
                     Reset Statistics
                   </button>
                 </div>
+              </div>
+
+              {/* Tab: Online Players */}
+              <div className={`dashboard-tab-pane ${activeTab === 'stats' ? 'active mobile-visible' : 'mobile-hidden'}`}>
+                <OnlinePlayersPanel
+                  onlineUsers={onlineUsers}
+                  currentUserEmail={userProfile?.email}
+                  onSendChallenge={handleSendChallenge}
+                />
               </div>
             </div>
 
