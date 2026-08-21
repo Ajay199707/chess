@@ -113,6 +113,7 @@ export default function App() {
   const botTimeoutRef = useRef(null);
   const socketRef = useRef(null);
   const capturesRef = useRef(null);
+  const playerColorRef = useRef(null);
 
   // Draggable Captured Pieces Bag logic
   const [bagPos, setBagPos] = useState({ x: 0, y: 0 });
@@ -424,6 +425,11 @@ export default function App() {
     };
   }, []);
 
+  // Sync playerColorRef to avoid dependency loop in room socket listeners
+  useEffect(() => {
+    playerColorRef.current = playerColor;
+  }, [playerColor]);
+
   const handleAuthSuccess = (profile, token) => {
     safeSetItem('chess_user_token', token);
     safeSetItem('chess_user_email', profile.email);
@@ -730,7 +736,7 @@ export default function App() {
 
       // Sync last move highlight and play opponent move sound cues
       if (updatedRoomState.gameState.lastMove) {
-        const isMyTurn = newGameInstance.turn() === (playerColor === 'white' ? 'w' : 'b');
+        const isMyTurn = newGameInstance.turn() === (playerColorRef.current === 'white' ? 'w' : 'b');
         const isCheck = newGameInstance.inCheck();
         const isCapture = updatedRoomState.gameState.lastMove.flags?.includes('c');
 
@@ -766,7 +772,7 @@ export default function App() {
     };
 
     const handleDrawOffered = ({ from }) => {
-      if (from !== playerColor) {
+      if (from !== playerColorRef.current) {
         setDrawOfferPending(from);
       }
     };
@@ -776,7 +782,7 @@ export default function App() {
     };
 
     const handleUndoRequested = ({ from }) => {
-      if (from !== playerColor) {
+      if (from !== playerColorRef.current) {
         setUndoRequestPending(from);
       }
     };
@@ -792,7 +798,7 @@ export default function App() {
     };
 
     const handleRestartOffered = ({ from }) => {
-      if (from !== playerColor) {
+      if (from !== playerColorRef.current) {
         setRestartOfferPending(from);
       }
     };
@@ -831,7 +837,7 @@ export default function App() {
       setLastMove(null);
       socket.emit('enter_lobby');
     };
-  }, [socket, roomCode, gameMode, playerColor, timeControl, userProfile]);
+  }, [socket, roomCode, gameMode, timeControl, userProfile]);
 
   const handleOnlineMove = (moveDetails) => {
     if (!socket || isSpectator || gameStatus !== 'playing') return;
