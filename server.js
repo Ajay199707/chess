@@ -28,6 +28,17 @@ const PORT = process.env.PORT || 3001;
 
 import fs from 'fs';
 
+app.get('/api/feedbacks', (req, res) => {
+  try {
+    const dbFile = path.join(__dirname, 'db.json');
+    if (!fs.existsSync(dbFile)) return res.json([]);
+    const data = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
+    res.json(data.feedbacks || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Serve static files in production if dist exists, otherwise serve a simple API status
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
