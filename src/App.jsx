@@ -1416,14 +1416,6 @@ export default function App() {
                 </button>
                 <button 
                   className="btn-text" 
-                  onClick={() => setShowFloatingCaptures(!showFloatingCaptures)}
-                  title={showFloatingCaptures ? "Hide Floating Captures Bag" : "Show Floating Captures Bag"}
-                >
-                  <Coins size={16} />
-                  {showFloatingCaptures ? "Hide Captures Bag" : "Show Captures Bag"}
-                </button>
-                <button 
-                  className="btn-text" 
                   onClick={() => setIsFeedbackOpen(true)}
                   title="Share Feedback or Write a Review"
                 >
@@ -2049,6 +2041,14 @@ export default function App() {
                   disabled={isSpectator || rematchRequestSent}
                 >
                   {rematchRequestSent ? "⏳ Waiting for Restart..." : "🔄 Restart Match"}
+                </button>
+                
+                <button 
+                  className="action-tile config" 
+                  onClick={() => setShowFloatingCaptures(!showFloatingCaptures)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <Coins size={16} /> {showFloatingCaptures ? "Hide Captures Bag" : "Show Captures Bag"}
                 </button>
               </div>
 
