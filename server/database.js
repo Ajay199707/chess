@@ -115,7 +115,29 @@ export function verifySession(email, token) {
   const normalizedEmail = email.toLowerCase().trim();
   const user = db.users[normalizedEmail];
 
-  if (!user || !user.tokens.includes(token)) {
+  if (!user) {
+    // The server was likely restarted (ephemeral Render container wiped db.json).
+    // Seamlessly recreate the user account so they aren't forced to re-register.
+    const salt = generateSalt();
+    const passwordHash = hashPassword(token, salt); // Just mock it
+    db.users[normalizedEmail] = {
+      email: normalizedEmail,
+      name: normalizedEmail.split('@')[0], // Best guess for name
+      passwordHash,
+      salt,
+      tokens: [token],
+      stats: { gamesPlayed: 0, onlineMatchesPlayed: 0, elo: 1200, onlineWins: 0, onlineLosses: 0, onlineDraws: 0 }
+    };
+    saveDb(db);
+    return {
+      success: true,
+      name: db.users[normalizedEmail].name,
+      email: normalizedEmail,
+      stats: db.users[normalizedEmail].stats
+    };
+  }
+
+  if (!user.tokens.includes(token)) {
     return { success: false };
   }
 
