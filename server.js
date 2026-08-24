@@ -230,6 +230,38 @@ io.on('connection', (socket) => {
     socket.emit('auth_response', res);
   });
 
+  socket.on('google_login', async ({ credential, clientId }) => {
+    try {
+      const { OAuth2Client } = await import('google-auth-library');
+      const client = new OAuth2Client(clientId);
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: clientId,
+      });
+      const payload = ticket.getPayload();
+      
+      if (payload && payload.email) {
+        const res = db.googleLoginUser(payload.email, payload.name || payload.given_name || 'Player');
+        if (res.success) {
+          loggedInEmail = res.email;
+          onlineUsers.set(socket.id, {
+            name: res.name,
+            email: res.email,
+            elo: res.stats.elo,
+            status: 'lobby'
+          });
+          broadcastOnlineUsers();
+        }
+        socket.emit('auth_response', res);
+      } else {
+        socket.emit('auth_response', { success: false, message: "Invalid Google token payload" });
+      }
+    } catch (err) {
+      console.error("Google verify error:", err);
+      socket.emit('auth_response', { success: false, message: "Google authentication failed" });
+    }
+  });
+
   socket.on('verify_session', ({ email, token }) => {
     const res = db.verifySession(email, token);
     if (res.success) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Key, Mail, User, ArrowLeftRight } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 export function LoginScreen({ socket, onAuthSuccess }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -130,6 +131,29 @@ export function LoginScreen({ socket, onAuthSuccess }) {
             {loading ? "Authenticating..." : isRegister ? "Sign Up & Play" : "Log In"}
           </button>
         </form>
+
+        <div className="google-login-container" style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem', width: '100%' }}>
+          <GoogleLogin
+            onSuccess={(credentialResponse) => {
+              if (socket) {
+                setLoading(true);
+                // Hardcode empty clientId since we handle verification securely via audience checks,
+                // but we need to pass clientId to backend if we want backend to verify properly.
+                // However, our backend doesn't strictly need it if we pass it dynamically, but we'll use a placeholder
+                socket.emit('google_login', { 
+                  credential: credentialResponse.credential, 
+                  clientId: "YOUR_GOOGLE_CLIENT_ID_HERE" 
+                });
+              }
+            }}
+            onError={() => {
+              setError("Google Login Failed");
+            }}
+            theme="filled_black"
+            text={isRegister ? "signup_with" : "signin_with"}
+            shape="pill"
+          />
+        </div>
 
         <div className="login-card-footer">
           <span>

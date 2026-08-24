@@ -110,6 +110,44 @@ export function loginUser(email, password) {
   };
 }
 
+export function googleLoginUser(email, name) {
+  const db = loadDb();
+  const normalizedEmail = email.toLowerCase().trim();
+  let user = db.users[normalizedEmail];
+
+  if (!user) {
+    // Auto-register Google user
+    const salt = generateSalt();
+    const passwordHash = hashPassword(generateToken(), salt); // Dummy password
+    user = {
+      email: normalizedEmail,
+      name: name.trim(),
+      passwordHash,
+      salt,
+      tokens: [],
+      stats: { gamesPlayed: 0, onlineMatchesPlayed: 0, elo: 1200, onlineWins: 0, onlineLosses: 0, onlineDraws: 0 }
+    };
+    db.users[normalizedEmail] = user;
+  }
+
+  const token = generateToken();
+  user.tokens.push(token);
+
+  if (user.tokens.length > 5) {
+    user.tokens.shift();
+  }
+
+  saveDb(db);
+
+  return {
+    success: true,
+    token,
+    name: user.name,
+    email: normalizedEmail,
+    stats: user.stats
+  };
+}
+
 export function verifySession(email, token) {
   const db = loadDb();
   const normalizedEmail = email.toLowerCase().trim();
