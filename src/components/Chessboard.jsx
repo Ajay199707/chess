@@ -238,7 +238,19 @@ export const Chessboard = ({
         {displayRanks.map((rank) =>
           displayFiles.map((file) => {
             const squareName = getSquareName(file, rank);
-            const piece = game.get(squareName);
+            let piece = game.get(squareName);
+            
+            // Visually move the piece if it's currently premoved
+            if (premove) {
+              if (squareName === premove.from) {
+                piece = null;
+              } else if (squareName === premove.to) {
+                piece = game.get(premove.from);
+                // Note: If they premove to capture an opponent's piece, this overwrites 
+                // the opponent's piece visually on this square, which matches standard behavior.
+              }
+            }
+
             const isDark = (files.indexOf(file) + ranks.indexOf(rank)) % 2 !== 0;
             const isSelected = selectedSquare === squareName;
             const isPossibleDest = possibleMoves.includes(squareName);
