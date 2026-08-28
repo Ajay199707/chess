@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Chess } from 'chess.js';
 import { ChessPieceSVG } from '../utils/chessPieces';
 
 export const Chessboard = ({
@@ -9,6 +10,8 @@ export const Chessboard = ({
   boardTheme = 'classic',
   interactive = true,
   lastMove = null,
+  premove = null,
+  onPremove = null,
 }) => {
   const [selectedSquare, setSelectedSquare] = useState(null);
   const [possibleMoves, setPossibleMoves] = useState([]);
