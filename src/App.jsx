@@ -5,7 +5,7 @@ import {
   Play, Users, Award, BookOpen, Volume2, VolumeX, 
   RotateCcw, Shield, HelpCircle, Trophy, Copy, Check,
   LogOut, ArrowLeftRight, Settings, Send, Sun, Moon, Coins,
-  MessageSquarePlus, X
+  MessageSquarePlus, X, Bell, BellOff
 } from 'lucide-react';
 
 import { Chessboard } from './components/Chessboard';
@@ -1516,6 +1516,24 @@ export default function App() {
                   {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
                   <span>{isDarkMode ? "Day Mode" : "Night Mode"}</span>
                 </button>
+                {("Notification" in window) && (
+                  <button 
+                    className="btn-text" 
+                    onClick={() => {
+                      if (Notification.permission === 'granted') {
+                        showToast("Notifications are already enabled.");
+                      } else {
+                        Notification.requestPermission().then(perm => {
+                          if (perm === 'granted') showToast("Push notifications enabled!");
+                        });
+                      }
+                    }}
+                    title="Enable Push Notifications"
+                  >
+                    {Notification.permission === 'granted' ? <Bell size={16} /> : <BellOff size={16} />}
+                    <span>{Notification.permission === 'granted' ? "Alerts On" : "Enable Alerts"}</span>
+                  </button>
+                )}
                 <button 
                   className="btn-text" 
                   onClick={() => setIsFeedbackOpen(true)}
