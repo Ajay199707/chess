@@ -689,15 +689,17 @@ export default function App() {
             const isPmCapture = botFinishedGame.get(pm.to) !== null || (pm.promotion && botFinishedGame.get(pm.from)?.type === 'p');
             const pmResult = botFinishedGame.move(pm);
             if (pmResult) {
-              setGame(botFinishedGame);
+              const finalPmGame = new Chess();
+              finalPmGame.loadPgn(botFinishedGame.pgn());
+              setGame(finalPmGame);
               setLastMove({ from: pm.from, to: pm.to });
-              if (botFinishedGame.isGameOver()) handleGameOverState(botFinishedGame);
-              else if (botFinishedGame.inCheck()) triggerSound('check');
+              if (finalPmGame.isGameOver()) handleGameOverState(finalPmGame);
+              else if (finalPmGame.inCheck()) triggerSound('check');
               else if (isPmCapture) triggerSound('capture');
               else triggerSound('move');
               
-              if (!botFinishedGame.isGameOver()) {
-                scheduleBotMove(botFinishedGame);
+              if (!finalPmGame.isGameOver()) {
+                scheduleBotMove(finalPmGame);
               }
             }
           } catch (e) {
@@ -845,17 +847,19 @@ export default function App() {
             const isCapture = newGameInstance.get(pm.to) !== null || (pm.promotion && newGameInstance.get(pm.from)?.type === 'p');
             const result = newGameInstance.move(pm);
             if (result) {
-              setGame(newGameInstance); // update again
+              const finalPmGame = new Chess();
+              finalPmGame.loadPgn(newGameInstance.pgn());
+              setGame(finalPmGame);
               setLastMove({ from: pm.from, to: pm.to });
-              if (newGameInstance.isGameOver()) triggerSound('gameover');
-              else if (newGameInstance.inCheck()) triggerSound('check');
+              if (finalPmGame.isGameOver()) triggerSound('gameover');
+              else if (finalPmGame.inCheck()) triggerSound('check');
               else if (isCapture) triggerSound('capture');
               else triggerSound('move');
               
               socket.emit('make_move', {
                 move: pm,
-                fen: newGameInstance.fen(),
-                history: newGameInstance.history()
+                fen: finalPmGame.fen(),
+                history: finalPmGame.history()
               });
             }
           } catch (e) {
