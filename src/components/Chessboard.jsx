@@ -77,6 +77,7 @@ export const Chessboard = ({
       try {
         const fenParts = game.fen().split(' ');
         fenParts[1] = normalizedPlayerColor; // force our turn
+        fenParts[3] = '-'; // clear en-passant target to avoid FEN validation errors
         const dummy = new Chess(fenParts.join(' '));
         return dummy.moves({ square: sq, verbose: true }).map(m => m.to);
       } catch (e) {
@@ -169,6 +170,7 @@ export const Chessboard = ({
         try {
           const fenParts = game.fen().split(' ');
           fenParts[1] = normalizedPlayerColor; 
+          fenParts[3] = '-'; // clear en-passant target to avoid FEN validation errors
           const dummy = new Chess(fenParts.join(' '));
           const moves = dummy.moves({ square, verbose: true });
           setPossibleMoves(moves.map(m => m.to));
