@@ -1755,6 +1755,9 @@ body {
     width: min(94vw, 94vh, 400px);
     height: calc(min(94vw, 94vh, 400px) + 90px);
     margin: 0 auto;
+    background: transparent;
+    border: none;
+    box-shadow: none;
   }
   
   .stats-panel {
@@ -1763,6 +1766,9 @@ body {
     margin: 0 auto;
     padding: 1rem;
     overflow-y: auto;
+    background: transparent;
+    border: none;
+    box-shadow: none;
   }
   
   .pieces-guide-grid {
