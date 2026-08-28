@@ -1552,12 +1552,12 @@ export default function App() {
                   className="theme-select select-dropdown"
                   aria-label="Select board theme"
                 >
-                  <option value="classic">🌲 Birch Wood</option>
-                  <option value="wood">🪵 Walnut Wood</option>
-                  <option value="metal">⚙️ Brushed Metal</option>
-                  <option value="slate">🪙 Modern Slate</option>
-                  <option value="gold">✨ Midnight Gold</option>
-                  <option value="forest">🌿 Forest Green</option>
+                  <option value="classic">Birch Wood</option>
+                  <option value="wood">Walnut Wood</option>
+                  <option value="metal">Brushed Metal</option>
+                  <option value="slate">Modern Slate</option>
+                  <option value="gold">Midnight Gold</option>
+                  <option value="forest">Forest Green</option>
                 </select>
 
                 <button 
