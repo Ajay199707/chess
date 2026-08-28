@@ -685,26 +685,28 @@ export default function App() {
           const pm = premoveRef.current;
           handleSetPremove(null);
           
-          try {
-            const isPmCapture = botFinishedGame.get(pm.to) !== null || (pm.promotion && botFinishedGame.get(pm.from)?.type === 'p');
-            const pmResult = botFinishedGame.move(pm);
-            if (pmResult) {
-              const finalPmGame = new Chess();
-              finalPmGame.loadPgn(botFinishedGame.pgn());
-              setGame(finalPmGame);
-              setLastMove({ from: pm.from, to: pm.to });
-              if (finalPmGame.isGameOver()) handleGameOverState(finalPmGame);
-              else if (finalPmGame.inCheck()) triggerSound('check');
-              else if (isPmCapture) triggerSound('capture');
-              else triggerSound('move');
-              
-              if (!finalPmGame.isGameOver()) {
-                scheduleBotMove(finalPmGame);
+          setTimeout(() => {
+            try {
+              const isPmCapture = botFinishedGame.get(pm.to) !== null || (pm.promotion && botFinishedGame.get(pm.from)?.type === 'p');
+              const pmResult = botFinishedGame.move(pm);
+              if (pmResult) {
+                const finalPmGame = new Chess();
+                finalPmGame.loadPgn(botFinishedGame.pgn());
+                setGame(finalPmGame);
+                setLastMove({ from: pm.from, to: pm.to });
+                if (finalPmGame.isGameOver()) handleGameOverState(finalPmGame);
+                else if (finalPmGame.inCheck()) triggerSound('check');
+                else if (isPmCapture) triggerSound('capture');
+                else triggerSound('move');
+                
+                if (!finalPmGame.isGameOver()) {
+                  scheduleBotMove(finalPmGame);
+                }
               }
+            } catch (e) {
+              console.warn("Premove invalidated by bot's move");
             }
-          } catch (e) {
-            console.warn("Premove invalidated by bot's move");
-          }
+          }, 150);
         }
       }
     }, 600);
@@ -843,28 +845,30 @@ export default function App() {
           const pm = premoveRef.current;
           handleSetPremove(null);
           
-          try {
-            const isCapture = newGameInstance.get(pm.to) !== null || (pm.promotion && newGameInstance.get(pm.from)?.type === 'p');
-            const result = newGameInstance.move(pm);
-            if (result) {
-              const finalPmGame = new Chess();
-              finalPmGame.loadPgn(newGameInstance.pgn());
-              setGame(finalPmGame);
-              setLastMove({ from: pm.from, to: pm.to });
-              if (finalPmGame.isGameOver()) triggerSound('gameover');
-              else if (finalPmGame.inCheck()) triggerSound('check');
-              else if (isCapture) triggerSound('capture');
-              else triggerSound('move');
-              
-              socket.emit('make_move', {
-                move: pm,
-                fen: finalPmGame.fen(),
-                history: finalPmGame.history()
-              });
+          setTimeout(() => {
+            try {
+              const isCapture = newGameInstance.get(pm.to) !== null || (pm.promotion && newGameInstance.get(pm.from)?.type === 'p');
+              const result = newGameInstance.move(pm);
+              if (result) {
+                const finalPmGame = new Chess();
+                finalPmGame.loadPgn(newGameInstance.pgn());
+                setGame(finalPmGame);
+                setLastMove({ from: pm.from, to: pm.to });
+                if (finalPmGame.isGameOver()) triggerSound('gameover');
+                else if (finalPmGame.inCheck()) triggerSound('check');
+                else if (isCapture) triggerSound('capture');
+                else triggerSound('move');
+                
+                socket.emit('make_move', {
+                  move: pm,
+                  fen: finalPmGame.fen(),
+                  history: finalPmGame.history()
+                });
+              }
+            } catch (e) {
+              console.warn("Premove invalidated by opponent's move");
             }
-          } catch (e) {
-            console.warn("Premove invalidated by opponent's move");
-          }
+          }, 150);
         }
       }
     };
