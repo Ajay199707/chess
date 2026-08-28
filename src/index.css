@@ -53,7 +53,7 @@
 
 .app-root.theme-gold {
   --sq-light: #FFF8E7;
-  --sq-dark: #3A3525;
+  --sq-dark: #AD8C41; /* Lightened from #3A3525 to ensure black pieces are visible */
   --sq-highlight: rgba(212, 175, 55, 0.45);
 }
 
