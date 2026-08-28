@@ -354,14 +354,6 @@ export default function App() {
     socketRef.current = newSocket;
     setSocket(newSocket);
 
-    newSocket.on('connect', () => {
-      const savedEmail = safeGetItem('chess_user_email', null);
-      const savedToken = safeGetItem('chess_user_token', null);
-      if (savedEmail && savedToken) {
-        newSocket.emit('verify_session', { email: savedEmail, token: savedToken });
-      }
-    });
-
     newSocket.on('online_users_update', ({ users, activeMatches }) => {
       setOnlineUsers(users);
       if (activeMatches) {
@@ -464,6 +456,32 @@ export default function App() {
   useEffect(() => {
     playerColorRef.current = playerColor;
   }, [playerColor]);
+
+  // Dynamic Reconnection Logic for Mobile Drops
+  useEffect(() => {
+    if (!socket) return;
+    
+    const onReconnect = () => {
+      // If we reconnected and have auth, re-verify
+      const savedEmail = safeGetItem('chess_user_email', null);
+      const savedToken = safeGetItem('chess_user_token', null);
+      if (savedEmail && savedToken) {
+        socket.emit('verify_session', { email: savedEmail, token: savedToken });
+      }
+      
+      // If we were in a multiplayer match, tell the server we are back
+      if (gameMode === 'online-2p' && roomCode) {
+        socket.emit('join_room', { 
+          roomId: roomCode, 
+          name: safeGetItem('chess_user_email') ? 'Player' : 'Guest', // will be overwritten by server state
+          timeControl: timeControl
+        });
+      }
+    };
+
+    socket.on('connect', onReconnect);
+    return () => socket.off('connect', onReconnect);
+  }, [socket, gameMode, roomCode, timeControl]);
 
   const handleAuthSuccess = (profile, token) => {
     safeSetItem('chess_user_token', token);
