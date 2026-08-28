@@ -142,7 +142,7 @@ export function LoginScreen({ socket, onAuthSuccess }) {
                 // However, our backend doesn't strictly need it if we pass it dynamically, but we'll use a placeholder
                 socket.emit('google_login', { 
                   credential: credentialResponse.credential, 
-                  clientId: "YOUR_GOOGLE_CLIENT_ID_HERE" 
+                  clientId: "757539697967-e199pg2lct0us4j403ebmtqm3spaepva.apps.googleusercontent.com" 
                 });
               }
             }}

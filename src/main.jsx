@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.jsx'
 
 // The user must replace this with their actual Google Client ID
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE";
+const GOOGLE_CLIENT_ID = "757539697967-e199pg2lct0us4j403ebmtqm3spaepva.apps.googleusercontent.com";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
