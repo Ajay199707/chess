@@ -58,37 +58,73 @@ export const Chessboard = ({
   const handleSquareClick = (square) => {
     if (!interactive) return;
 
-    // If spectator, no interaction
-    if (normalizedPlayerColor && normalizedPlayerColor !== game.turn()) {
+    const piece = game.get(square);
+    const isOpponentTurn = normalizedPlayerColor && normalizedPlayerColor !== game.turn();
+
+    // If spectator (not playing in this game), no interaction
+    if (normalizedPlayerColor && game.turn() !== normalizedPlayerColor && !onPremove) {
       return;
     }
-
-    const piece = game.get(square);
 
     // If a promotion modal is open, force selection there
     if (promotionPending) return;
 
+    // Helper to get pseudo-legal moves for premoving
+    const getPremoveMoves = (sq) => {
+      try {
+        const fenParts = game.fen().split(' ');
+        fenParts[1] = normalizedPlayerColor; // force our turn
+        const dummy = new Chess(fenParts.join(' '));
+        return dummy.moves({ square: sq, verbose: true }).map(m => m.to);
+      } catch (e) {
+        return [];
+      }
+    };
+
     // Case 1: Select own piece
-    if (piece && piece.color === game.turn() && (!normalizedPlayerColor || piece.color === normalizedPlayerColor)) {
-      setSelectedSquare(square);
-      // Find legal moves for this piece
-      const moves = game.moves({ square, verbose: true });
-      setPossibleMoves(moves.map(m => m.to));
-      return;
+    if (piece && (!normalizedPlayerColor || piece.color === normalizedPlayerColor)) {
+      if (isOpponentTurn && onPremove) {
+        // Premove selection
+        if (premove && premove.from === square && !premove.to) {
+          // Deselect
+          setSelectedSquare(null);
+          setPossibleMoves([]);
+          onPremove(null);
+        } else {
+          setSelectedSquare(square);
+          setPossibleMoves(getPremoveMoves(square));
+          // If we had a full premove before, clear it because we are selecting a new piece
+          onPremove(null);
+        }
+        return;
+      } else if (!isOpponentTurn && piece.color === game.turn()) {
+        // Normal selection
+        setSelectedSquare(square);
+        const moves = game.moves({ square, verbose: true });
+        setPossibleMoves(moves.map(m => m.to));
+        return;
+      }
     }
 
     // Case 2: Attempt move to clicked square
     if (selectedSquare) {
       if (possibleMoves.includes(square)) {
-        // Check for promotion
-        const movingPiece = game.get(selectedSquare);
-        const isPawn = movingPiece && movingPiece.type === 'p';
-        const isPromotionRank = square.endsWith('8') || square.endsWith('1');
-
-        if (isPawn && isPromotionRank) {
-          setPromotionPending({ from: selectedSquare, to: square });
+        if (isOpponentTurn && onPremove) {
+          // Register premove
+          onPremove({ from: selectedSquare, to: square, promotion: 'q' });
+          setSelectedSquare(null);
+          setPossibleMoves([]);
         } else {
-          executeMove(selectedSquare, square);
+          // Normal move
+          const movingPiece = game.get(selectedSquare);
+          const isPawn = movingPiece && movingPiece.type === 'p';
+          const isPromotionRank = square.endsWith('8') || square.endsWith('1');
+
+          if (isPawn && isPromotionRank) {
+            setPromotionPending({ from: selectedSquare, to: square });
+          } else {
+            executeMove(selectedSquare, square);
+          }
         }
       } else {
         // Reset selections if clicked elsewhere
@@ -108,17 +144,44 @@ export const Chessboard = ({
   // Drag-and-drop events
   const handleDragStart = (e, square) => {
     if (!interactive) return;
-    if (normalizedPlayerColor && normalizedPlayerColor !== game.turn()) {
+    
+    const isOpponentTurn = normalizedPlayerColor && normalizedPlayerColor !== game.turn();
+    
+    if (isOpponentTurn && !onPremove) {
       e.preventDefault();
       return;
     }
 
     const piece = game.get(square);
-    if (piece && piece.color === game.turn() && (!normalizedPlayerColor || piece.color === normalizedPlayerColor)) {
-      e.dataTransfer.setData('text/plain', square);
-      setSelectedSquare(square);
-      const moves = game.moves({ square, verbose: true });
-      setPossibleMoves(moves.map(m => m.to));
+    if (piece && (!normalizedPlayerColor || piece.color === normalizedPlayerColor)) {
+      if (isOpponentTurn) {
+        if (piece.color !== normalizedPlayerColor) {
+          e.preventDefault();
+          return;
+        }
+        e.dataTransfer.setData('text/plain', square);
+        setSelectedSquare(square);
+        
+        // Helper to get pseudo-legal moves for premoving
+        try {
+          const fenParts = game.fen().split(' ');
+          fenParts[1] = normalizedPlayerColor; 
+          const dummy = new Chess(fenParts.join(' '));
+          const moves = dummy.moves({ square, verbose: true });
+          setPossibleMoves(moves.map(m => m.to));
+        } catch (e) {
+          setPossibleMoves([]);
+        }
+      } else {
+        if (piece.color !== game.turn()) {
+          e.preventDefault();
+          return;
+        }
+        e.dataTransfer.setData('text/plain', square);
+        setSelectedSquare(square);
+        const moves = game.moves({ square, verbose: true });
+        setPossibleMoves(moves.map(m => m.to));
+      }
     } else {
       e.preventDefault();
     }
@@ -133,14 +196,22 @@ export const Chessboard = ({
     const sourceSquare = e.dataTransfer.getData('text/plain');
 
     if (sourceSquare && possibleMoves.includes(targetSquare)) {
-      const movingPiece = game.get(sourceSquare);
-      const isPawn = movingPiece && movingPiece.type === 'p';
-      const isPromotionRank = targetSquare.endsWith('8') || targetSquare.endsWith('1');
-
-      if (isPawn && isPromotionRank) {
-        setPromotionPending({ from: sourceSquare, to: targetSquare });
+      const isOpponentTurn = normalizedPlayerColor && normalizedPlayerColor !== game.turn();
+      
+      if (isOpponentTurn && onPremove) {
+        onPremove({ from: sourceSquare, to: targetSquare, promotion: 'q' });
+        setSelectedSquare(null);
+        setPossibleMoves([]);
       } else {
-        executeMove(sourceSquare, targetSquare);
+        const movingPiece = game.get(sourceSquare);
+        const isPawn = movingPiece && movingPiece.type === 'p';
+        const isPromotionRank = targetSquare.endsWith('8') || targetSquare.endsWith('1');
+
+        if (isPawn && isPromotionRank) {
+          setPromotionPending({ from: sourceSquare, to: targetSquare });
+        } else {
+          executeMove(sourceSquare, targetSquare);
+        }
       }
     } else {
       setSelectedSquare(null);
@@ -149,7 +220,15 @@ export const Chessboard = ({
   };
 
   return (
-    <div className={`chessboard-wrapper theme-${boardTheme}`}>
+    <div 
+      className={`chessboard-wrapper theme-${boardTheme}`}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        if (onPremove) onPremove(null);
+        setSelectedSquare(null);
+        setPossibleMoves([]);
+      }}
+    >
       <div className="chessboard">
         {displayRanks.map((rank) =>
           displayFiles.map((file) => {
@@ -161,6 +240,8 @@ export const Chessboard = ({
             const isLastSource = lastMove?.from === squareName;
             const isLastDest = lastMove?.to === squareName;
             const isKingInCheck = kingInCheck === squareName;
+            const isPremoveSource = premove?.from === squareName;
+            const isPremoveDest = premove?.to === squareName;
 
             let squareClass = 'square';
             if (isDark) squareClass += ' dark';
@@ -169,6 +250,7 @@ export const Chessboard = ({
             if (isSelected) squareClass += ' selected';
             if (isLastSource || isLastDest) squareClass += ' last-move';
             if (isKingInCheck) squareClass += ' king-check';
+            if (isPremoveSource || isPremoveDest) squareClass += ' premove';
 
             return (
               <div

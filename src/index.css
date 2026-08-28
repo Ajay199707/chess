@@ -771,6 +771,13 @@ body {
   background: var(--sq-last-move);
 }
 
+.square.premove::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(239, 68, 68, 0.4);
+}
+
 .square.king-check {
   animation: checkPulse 1s infinite alternate;
   z-index: 1;

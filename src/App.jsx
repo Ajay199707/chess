@@ -115,12 +115,14 @@ export default function App() {
   const [rematchRequestSent, setRematchRequestSent] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [nextMatchNotifications, setNextMatchNotifications] = useState([]); // [{ id, name, email }]
+  const [premove, setPremove] = useState(null); // { from, to, promotion }
 
   // References
   const botTimeoutRef = useRef(null);
   const socketRef = useRef(null);
   const capturesRef = useRef(null);
   const playerColorRef = useRef(null);
+  const premoveRef = useRef(null);
 
   // Draggable Captured Pieces Bag logic
   const [bagPos, setBagPos] = useState({ x: 0, y: 0 });
@@ -524,18 +526,7 @@ export default function App() {
       setPlayerColor(botPlaysWhite ? 'black' : 'white');
 
       if (botPlaysWhite) {
-        showToast("Bot thinking...");
-        botTimeoutRef.current = setTimeout(() => {
-          const move = getBestMove(newGame, selectedDiff);
-          if (move) {
-            newGame.move(move);
-            const finalGame = new Chess();
-            finalGame.loadPgn(newGame.pgn());
-            setGame(finalGame);
-            setLastMove({ from: move.from, to: move.to });
-            triggerSound('move');
-          }
-        }, 600);
+        scheduleBotMove(newGame);
       }
     } else if (mode === 'local-2p') {
       setPlayerColor(null);
@@ -624,6 +615,11 @@ export default function App() {
     });
   };
 
+  const handleSetPremove = (pm) => {
+    setPremove(pm);
+    premoveRef.current = pm;
+  };
+
   // --- GAME MOVE HANDLER (CLIENT SIDE - LOCAL / VS BOT) ---
   const handleLocalMove = (moveDetails) => {
     try {
@@ -652,36 +648,64 @@ export default function App() {
 
         // Bot Move scheduling if in vs-bot mode
         if (gameMode === 'vs-bot' && !isGameOver) {
-          showToast("Bot thinking...");
-          botTimeoutRef.current = setTimeout(() => {
-            const botMove = getBestMove(newGame, difficulty);
-            if (botMove) {
-              const isBotCapture = newGame.get(botMove.to) !== null;
-              newGame.move(botMove);
-              const botFinishedGame = new Chess();
-              botFinishedGame.loadPgn(newGame.pgn());
-              setGame(botFinishedGame);
-              setLastMove({ from: botMove.from, to: botMove.to });
-
-              const isBotCheck = newGame.inCheck();
-              const isBotGameOver = newGame.isGameOver();
-
-              if (isBotGameOver) {
-                handleGameOverState(newGame);
-              } else if (isBotCheck) {
-                triggerSound('check');
-              } else if (isBotCapture) {
-                triggerSound('capture');
-              } else {
-                triggerSound('move');
-              }
-            }
-          }, 500);
+          scheduleBotMove(newGame);
         }
       }
     } catch (e) {
       console.warn("Invalid move attempted", e);
     }
+  };
+
+  const scheduleBotMove = (currentGame) => {
+    showToast("Bot thinking...");
+    botTimeoutRef.current = setTimeout(() => {
+      const botMove = getBestMove(currentGame, difficulty);
+      if (botMove) {
+        const isBotCapture = currentGame.get(botMove.to) !== null;
+        currentGame.move(botMove);
+        const botFinishedGame = new Chess();
+        botFinishedGame.loadPgn(currentGame.pgn());
+        setGame(botFinishedGame);
+        setLastMove({ from: botMove.from, to: botMove.to });
+
+        const isBotCheck = currentGame.inCheck();
+        const isBotGameOver = currentGame.isGameOver();
+
+        if (isBotGameOver) {
+          handleGameOverState(currentGame);
+        } else if (isBotCheck) {
+          triggerSound('check');
+        } else if (isBotCapture) {
+          triggerSound('capture');
+        } else {
+          triggerSound('move');
+        }
+
+        if (premoveRef.current && !isBotGameOver) {
+          const pm = premoveRef.current;
+          handleSetPremove(null);
+          
+          try {
+            const isPmCapture = botFinishedGame.get(pm.to) !== null || (pm.promotion && botFinishedGame.get(pm.from)?.type === 'p');
+            const pmResult = botFinishedGame.move(pm);
+            if (pmResult) {
+              setGame(botFinishedGame);
+              setLastMove({ from: pm.from, to: pm.to });
+              if (botFinishedGame.isGameOver()) handleGameOverState(botFinishedGame);
+              else if (botFinishedGame.inCheck()) triggerSound('check');
+              else if (isPmCapture) triggerSound('capture');
+              else triggerSound('move');
+              
+              if (!botFinishedGame.isGameOver()) {
+                scheduleBotMove(botFinishedGame);
+              }
+            }
+          } catch (e) {
+            console.warn("Premove invalidated by bot's move");
+          }
+        }
+      }
+    }, 600);
   };
 
   const handleGameOverState = (gameInstance) => {
@@ -811,6 +835,33 @@ export default function App() {
       if (['checkmate', 'draw', 'timeout', 'abandoned'].includes(updatedRoomState.gameState.status)) {
         triggerSound('gameover');
         updateScores(updatedRoomState.gameState.winner || 'draw', updatedRoomState.gameState.status);
+      } else if (premoveRef.current && updatedRoomState.gameState.status === 'playing') {
+        const isMyTurn = newGameInstance.turn() === (playerColorRef.current === 'white' ? 'w' : 'b');
+        if (isMyTurn) {
+          const pm = premoveRef.current;
+          handleSetPremove(null);
+          
+          try {
+            const isCapture = newGameInstance.get(pm.to) !== null || (pm.promotion && newGameInstance.get(pm.from)?.type === 'p');
+            const result = newGameInstance.move(pm);
+            if (result) {
+              setGame(newGameInstance); // update again
+              setLastMove({ from: pm.from, to: pm.to });
+              if (newGameInstance.isGameOver()) triggerSound('gameover');
+              else if (newGameInstance.inCheck()) triggerSound('check');
+              else if (isCapture) triggerSound('capture');
+              else triggerSound('move');
+              
+              socket.emit('make_move', {
+                move: pm,
+                fen: newGameInstance.fen(),
+                history: newGameInstance.history()
+              });
+            }
+          } catch (e) {
+            console.warn("Premove invalidated by opponent's move");
+          }
+        }
       }
     };
 
@@ -1711,10 +1762,12 @@ export default function App() {
                       game={game}
                       onMove={gameMode === 'online-2p' ? handleOnlineMove : handleLocalMove}
                       turn={activeTurn}
-                      playerColor={gameMode === 'online-2p' ? playerColor : null}
+                      playerColor={gameMode === 'online-2p' || gameMode === 'vs-bot' ? playerColor : null}
                       boardTheme={boardTheme}
                       interactive={gameStatus === 'playing' && !isSpectator}
                       lastMove={lastMove}
+                      premove={premove}
+                      onPremove={handleSetPremove}
                     />
 
                     {/* Floating Captured Pieces (Coins) Toggler */}
