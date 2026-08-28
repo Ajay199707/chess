@@ -367,6 +367,12 @@ export default function App() {
 
     newSocket.on('challenge_received', (challenge) => {
       setActiveChallengeRequest(challenge);
+      triggerSound('move');
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Chess Challenge!", {
+          body: `${challenge.challengerName} has challenged you to a game!`
+        });
+      }
     });
 
     newSocket.on('challenge_accepted', ({ roomId, timeControl: tc }) => {
@@ -488,6 +494,11 @@ export default function App() {
     safeSetItem('chess_user_email', profile.email);
     setIsAuthenticated(true);
     setUserProfile(profile);
+    
+    // Request notification permissions so they get alerts in background
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
   };
 
   const handleLogout = () => {
