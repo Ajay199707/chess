@@ -1752,15 +1752,17 @@ body {
   }
   
   .moves-log-panel {
-    height: 200px;
     width: min(94vw, 94vh, 400px);
+    height: calc(min(94vw, 94vh, 400px) + 90px);
     margin: 0 auto;
   }
   
   .stats-panel {
     width: min(94vw, 94vh, 400px);
+    height: calc(min(94vw, 94vh, 400px) + 90px);
     margin: 0 auto;
     padding: 1rem;
+    overflow-y: auto;
   }
   
   .pieces-guide-grid {

@@ -2043,7 +2043,7 @@ export default function App() {
               </div>
 
               {/* Tab: Online Players */}
-              <div className={`dashboard-tab-pane ${activeTab === 'stats' ? 'active mobile-visible' : 'mobile-hidden'}`}>
+              <div className="dashboard-tab-pane mobile-hidden">
                 <OnlinePlayersPanel
                   onlineUsers={onlineUsers}
                   currentUserEmail={userProfile?.email}
