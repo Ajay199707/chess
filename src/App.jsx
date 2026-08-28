@@ -1467,7 +1467,7 @@ export default function App() {
 
               <footer className="menu-footer-actions">
                 <button className="btn-text" onClick={() => setIsGuidelinesOpen(true)}>
-                  <BookOpen size={16} /> How to Play Rules
+                  <BookOpen size={16} /> <span>How to Play Rules</span>
                 </button>
                 <button 
                   className="btn-text" 
@@ -1477,7 +1477,7 @@ export default function App() {
                   }}
                 >
                   {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                  {soundEnabled ? "Mute Sounds" : "Unmute Sounds"}
+                  <span>{soundEnabled ? "Mute Sounds" : "Unmute Sounds"}</span>
                 </button>
                 <button 
                   className="btn-text" 
@@ -1485,21 +1485,21 @@ export default function App() {
                   title={isDarkMode ? "Switch to Day Mode" : "Switch to Night Mode"}
                 >
                   {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-                  {isDarkMode ? "Day Mode" : "Night Mode"}
+                  <span>{isDarkMode ? "Day Mode" : "Night Mode"}</span>
                 </button>
                 <button 
                   className="btn-text" 
                   onClick={() => setIsFeedbackOpen(true)}
                   title="Share Feedback or Write a Review"
                 >
-                  <MessageSquarePlus size={16} /> Share Feedback
+                  <MessageSquarePlus size={16} /> <span>Share Feedback</span>
                 </button>
                 <button 
                   className="btn-text btn-logout" 
                   onClick={handleLogout}
                   title="Logout Account"
                 >
-                  <LogOut size={16} /> Logout
+                  <LogOut size={16} /> <span>Logout</span>
                 </button>
               </footer>
             </div>

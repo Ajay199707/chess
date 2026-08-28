@@ -3018,3 +3018,9 @@ body.mode-light .next-match-notification-bubble {
   }
 }
 
+/* Hide text on utility icons in mobile view */
+@media (max-width: 600px) {
+  .menu-footer-actions .btn-text span {
+    display: none;
+  }
+}
