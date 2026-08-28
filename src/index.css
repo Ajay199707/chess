@@ -3020,7 +3020,15 @@ body.mode-light .next-match-notification-bubble {
 
 /* Hide text on utility icons in mobile view */
 @media (max-width: 600px) {
+  .menu-footer-actions {
+    justify-content: center;
+    gap: 2rem;
+  }
   .menu-footer-actions .btn-text span {
     display: none;
+  }
+  .menu-footer-actions .btn-text svg {
+    width: 20px;
+    height: 20px;
   }
 }
