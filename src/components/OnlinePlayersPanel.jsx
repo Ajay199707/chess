@@ -237,7 +237,7 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
       )}
 
       {activeTab === 'chat' && (
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingTop: '1rem' }}>
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingTop: '1rem', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
           <GlobalChatPanel 
             socket={socket} 
             playerName={playerName} 

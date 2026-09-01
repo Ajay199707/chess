@@ -22,9 +22,8 @@ export const GlobalChatPanel = ({ socket, playerName, globalMessages = [] }) => 
       sendMessage();
     }
   };
-
   return (
-    <div className="chat-panel global-chat-panel" style={{ flex: 1, height: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+    <div className="chat-panel global-chat-panel" style={{ flex: 1, height: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       <div className="chat-header">
         <Globe size={18} className="text-gold" />
         <h3>Global Lobby Chat</h3>
