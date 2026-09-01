@@ -347,36 +347,41 @@ io.on('connection', (socket) => {
         }
       }
 
-      // Find target's socket and notify them directly if online
-      let targetSocketId = null;
+      // Find all target sockets and notify them directly if online
+      let targetSocketIds = [];
       for (const [sId, u] of onlineUsers.entries()) {
         if (u.email === targetEmail.toLowerCase()) {
-          targetSocketId = sId;
-          break;
+          targetSocketIds.push(sId);
         }
       }
-      if (targetSocketId) {
-        io.to(targetSocketId).emit('friend_request_received', { senderEmail, senderName });
-        io.to(targetSocketId).emit('friends_list_data', db.getFriendsList(targetEmail));
+      for (const sId of targetSocketIds) {
+        io.to(sId).emit('friend_request_received', { senderEmail, senderName });
+        io.to(sId).emit('friends_list_data', db.getFriendsList(targetEmail));
       }
       socket.emit('friend_request_sent', { success: true });
-      socket.emit('friends_list_data', db.getFriendsList(senderEmail));
+      
+      // Emit updated list to all sender sockets too
+      let senderSocketIds = [];
+      for (const [sId, u] of onlineUsers.entries()) {
+        if (u.email === senderEmail.toLowerCase()) {
+          senderSocketIds.push(sId);
+        }
+      }
+      for (const sId of senderSocketIds) {
+        io.to(sId).emit('friends_list_data', db.getFriendsList(senderEmail));
+      }
     }
   });
 
   socket.on('accept_friend_request', ({ userEmail, senderEmail }) => {
     if (db.acceptFriendRequest(userEmail, senderEmail)) {
-      socket.emit('friends_list_data', db.getFriendsList(userEmail));
-      // Notify sender if online
-      let targetSocketId = null;
+      // update all sockets for user
       for (const [sId, u] of onlineUsers.entries()) {
-        if (u.email === senderEmail.toLowerCase()) {
-          targetSocketId = sId;
-          break;
-        }
+        if (u.email === userEmail.toLowerCase()) io.to(sId).emit('friends_list_data', db.getFriendsList(userEmail));
       }
-      if (targetSocketId) {
-        io.to(targetSocketId).emit('friends_list_data', db.getFriendsList(senderEmail));
+      // update all sockets for sender
+      for (const [sId, u] of onlineUsers.entries()) {
+        if (u.email === senderEmail.toLowerCase()) io.to(sId).emit('friends_list_data', db.getFriendsList(senderEmail));
       }
     }
   });
