@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trophy, History, X } from 'lucide-react';
 
-export const PublicProfileModal = ({ profile, onClose, onViewReplay, socket, currentUserEmail }) => {
+export const PublicProfileModal = ({ profile, onClose, onViewReplay, socket, currentUserEmail, friendsData }) => {
   if (!profile) return null;
 
   return (
