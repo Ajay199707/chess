@@ -2113,7 +2113,7 @@ export default function App() {
                   currentUserEmail={userProfile?.email}
                   onSendChallenge={handleSendChallenge}
                   onNotifyPlayer={handleNotifyPlayer}
-                  onWatchMatch={handleJoinAsSpectator}
+                  onWatchMatch={(roomId) => socket.emit('join_room', { roomCode: roomId, role: 'spectator' })}
                   socket={socket}
                   playerName={playerName}
                   friendsData={friendsData}
