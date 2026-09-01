@@ -14,31 +14,31 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
   const isCurrentUserPlaying = currentUser?.status === 'playing';
 
   return (
-    <div className="online-players-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '400px' }}>
-      <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+    <div className="online-players-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '300px' }}>
+      <div className="lobby-tabs-header">
         <button 
+          className={`lobby-tab-btn ${activeTab === 'players' ? 'active' : ''}`}
           onClick={() => setActiveTab('players')}
-          style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'players' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
         >
-          <Users size={16} /> Players
+          <Users size={16} /> <span className="tab-label">Players</span>
         </button>
         <button 
+          className={`lobby-tab-btn ${activeTab === 'friends' ? 'active' : ''}`}
           onClick={() => setActiveTab('friends')}
-          style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'friends' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
         >
-          <Award size={16} /> Friends
+          <Award size={16} /> <span className="tab-label">Friends</span>
         </button>
         <button 
+          className={`lobby-tab-btn ${activeTab === 'matches' ? 'active' : ''}`}
           onClick={() => setActiveTab('matches')}
-          style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'matches' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
         >
-          <Eye size={16} /> Matches
+          <Eye size={16} /> <span className="tab-label">Matches</span>
         </button>
         <button 
+          className={`lobby-tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
           onClick={() => setActiveTab('chat')}
-          style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'chat' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
         >
-          <MessageSquare size={16} /> Chat
+          <MessageSquare size={16} /> <span className="tab-label">Chat</span>
         </button>
       </div>
 
