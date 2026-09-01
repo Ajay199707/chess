@@ -124,6 +124,7 @@ export default function App() {
   const [viewingMatch, setViewingMatch] = useState(null);
   const [publicProfileData, setPublicProfileData] = useState(null);
   const [friendsData, setFriendsData] = useState({ friends: [], friendRequests: [] });
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // References
   const botTimeoutRef = useRef(null);
@@ -458,6 +459,13 @@ export default function App() {
     newSocket.on('friend_request_received', ({ senderEmail, senderName }) => {
       const displayName = senderName || senderEmail.split('@')[0];
       showToast(`${displayName} sent you a friend request!`);
+      
+      // Fallback: forcefully fetch the latest friends list from the server 
+      // just in case the automatic broadcast arrived empty or out of sync.
+      const currentEmail = safeGetItem('chess_user_email', '');
+      if (currentEmail) {
+        newSocket.emit('request_friends_list', { email: currentEmail });
+      }
     });
 
     newSocket.on('friend_request_sent', (res) => {
@@ -1411,8 +1419,50 @@ export default function App() {
         {gameMode === 'menu' && (
           <div className="menu-screen-layout">
             <div className="menu-card animate-fade-in">
-              <header className="menu-header">
-                <h1>👑 Apex Chess</h1>
+              <header className="menu-header" style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h1>♟️ Apex Chess</h1>
+                  <div style={{ position: 'relative' }}>
+                    <button 
+                      className="icon-only-btn" 
+                      onClick={() => setShowNotifications(!showNotifications)}
+                      style={{ position: 'relative', background: 'rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '50%' }}
+                    >
+                      <Bell size={20} />
+                      {friendsData?.friendRequests?.length > 0 && (
+                        <span style={{ position: 'absolute', top: 0, right: 0, background: '#ef4444', color: '#fff', fontSize: '10px', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {friendsData.friendRequests.length}
+                        </span>
+                      )}
+                    </button>
+                    {showNotifications && (
+                      <div className="notifications-dropdown animate-scale-in" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.5rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '280px', zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+                        <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)' }}>
+                          <h4 style={{ margin: 0, fontSize: '0.9rem' }}>Notifications</h4>
+                        </div>
+                        <div style={{ maxHeight: '300px', overflowY: 'auto', padding: '0.5rem' }}>
+                          {(!friendsData?.friendRequests || friendsData.friendRequests.length === 0) ? (
+                            <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                              No new notifications
+                            </div>
+                          ) : (
+                            friendsData.friendRequests.map((req, i) => (
+                              <div key={i} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', marginBottom: '0.5rem' }}>
+                                <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                                  <strong>{req.name}</strong> sent you a friend request!
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                  <button className="btn-primary" style={{ flex: 1, padding: '0.3rem', fontSize: '0.75rem' }} onClick={() => { socket.emit('accept_friend_request', { userEmail: userProfile?.email, senderEmail: req.email }); setShowNotifications(false); }}>Accept</button>
+                                  <button className="btn-danger" style={{ flex: 1, padding: '0.3rem', fontSize: '0.75rem' }} onClick={() => { socket.emit('decline_friend_request', { userEmail: userProfile?.email, senderEmail: req.email }); setShowNotifications(false); }}>Decline</button>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <p className="welcome-greeting">👋 Welcome, {userProfile?.name}! Let's build our strategic mind!</p>
               </header>
 
