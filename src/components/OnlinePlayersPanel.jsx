@@ -15,32 +15,36 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
 
   return (
     <div className="online-players-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '300px' }}>
-      <div className="lobby-tabs-header">
-        <button 
-          className={`lobby-tab-btn ${activeTab === 'players' ? 'active' : ''}`}
-          onClick={() => setActiveTab('players')}
-        >
-          <Users size={16} /> <span className="tab-label">Players</span>
-        </button>
-        <button 
-          className={`lobby-tab-btn ${activeTab === 'friends' ? 'active' : ''}`}
-          onClick={() => setActiveTab('friends')}
-        >
-          <Award size={16} /> <span className="tab-label">Friends</span>
-        </button>
-        <button 
-          className={`lobby-tab-btn ${activeTab === 'matches' ? 'active' : ''}`}
-          onClick={() => setActiveTab('matches')}
-        >
-          <Eye size={16} /> <span className="tab-label">Matches</span>
-        </button>
-        <button 
-          className={`lobby-tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
-          onClick={() => setActiveTab('chat')}
-        >
-          <MessageSquare size={16} /> <span className="tab-label">Chat</span>
-        </button>
-      </div>
+        <div className="lobby-tabs-header">
+          <button 
+            className={`lobby-tab-btn ${activeTab === 'players' ? 'active' : ''}`}
+            onClick={() => setActiveTab('players')}
+            title="Players"
+          >
+            <Users size={18} />
+          </button>
+          <button 
+            className={`lobby-tab-btn ${activeTab === 'friends' ? 'active' : ''}`}
+            onClick={() => setActiveTab('friends')}
+            title="Friends"
+          >
+            <Award size={18} />
+          </button>
+          <button 
+            className={`lobby-tab-btn ${activeTab === 'matches' ? 'active' : ''}`}
+            onClick={() => setActiveTab('matches')}
+            title="Matches"
+          >
+            <Eye size={18} />
+          </button>
+          <button 
+            className={`lobby-tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
+            onClick={() => setActiveTab('chat')}
+            title="Chat"
+          >
+            <MessageSquare size={18} />
+          </button>
+        </div>
 
       {activeTab === 'players' && (
         <>
