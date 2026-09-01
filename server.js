@@ -372,6 +372,23 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('cancel_friend_request', ({ userEmail, targetEmail }) => {
+    if (db.cancelFriendRequest(userEmail, targetEmail)) {
+      socket.emit('friends_list_data', db.getFriendsList(userEmail));
+      // Notify target if online
+      let targetSocketId = null;
+      for (const [sId, u] of onlineUsers.entries()) {
+        if (u.email === targetEmail.toLowerCase()) {
+          targetSocketId = sId;
+          break;
+        }
+      }
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('friends_list_data', db.getFriendsList(targetEmail));
+      }
+    }
+  });
+
   socket.on('decline_friend_request', ({ userEmail, senderEmail }) => {
     if (db.declineFriendRequest(userEmail, senderEmail)) {
       socket.emit('friends_list_data', db.getFriendsList(userEmail));

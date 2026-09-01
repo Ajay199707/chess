@@ -22,11 +22,46 @@ export const PublicProfileModal = ({ profile, onClose, onViewReplay, socket, cur
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
             {profile.onlineMatchesPlayed} Online Matches Played
           </div>
-          {currentUserEmail && currentUserEmail.toLowerCase() !== profile.email.toLowerCase() && (
-            <button className="btn-primary" style={{ marginTop: '1rem', padding: '0.5rem 1rem' }} onClick={() => socket.emit('send_friend_request', { senderEmail: currentUserEmail, targetEmail: profile.email })}>
-              Add Friend
-            </button>
-          )}
+          {currentUserEmail && currentUserEmail.toLowerCase() !== profile.email.toLowerCase() && (() => {
+            const isFriend = friendsData?.friends?.some(f => f.email.toLowerCase() === profile.email.toLowerCase());
+            const hasIncomingRequest = friendsData?.friendRequests?.some(r => r.email.toLowerCase() === profile.email.toLowerCase());
+            const hasSentRequest = friendsData?.sentRequests?.some(r => r.email.toLowerCase() === profile.email.toLowerCase());
+
+            if (isFriend) {
+              return (
+                <div style={{ marginTop: '1rem' }}>
+                  <span style={{ color: 'var(--color-emerald)', fontSize: '0.85rem' }}>✓ Friends</span>
+                </div>
+              );
+            }
+            if (hasSentRequest) {
+              return (
+                <div style={{ marginTop: '1rem' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Friend Request Pending...</span>
+                </div>
+              );
+            }
+            if (hasIncomingRequest) {
+              return (
+                <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                  <button className="btn-primary" style={{ padding: '0.5rem 1rem' }} onClick={() => {
+                    socket.emit('accept_friend_request', { userEmail: currentUserEmail, senderEmail: profile.email });
+                  }}>Accept Request</button>
+                  <button className="btn-danger" style={{ padding: '0.5rem 1rem' }} onClick={() => {
+                    socket.emit('decline_friend_request', { userEmail: currentUserEmail, senderEmail: profile.email });
+                  }}>Decline</button>
+                </div>
+              );
+            }
+
+            return (
+              <button className="btn-primary" style={{ marginTop: '1rem', padding: '0.5rem 1rem' }} onClick={() => {
+                socket.emit('send_friend_request', { senderEmail: currentUserEmail, targetEmail: profile.email });
+              }}>
+                Add Friend
+              </button>
+            );
+          })()}
         </div>
 
         <div className="stats-section match-history-section">

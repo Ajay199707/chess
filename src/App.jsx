@@ -2248,6 +2248,7 @@ export default function App() {
           }}
           socket={socket}
           currentUserEmail={userProfile?.email}
+          friendsData={friendsData}
         />
       )}
 

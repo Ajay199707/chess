@@ -175,7 +175,12 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
               {friendsData.sentRequests.map((req, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', marginBottom: '0.5rem' }}>
                   <span>{req.name} <span style={{fontSize: '0.75rem', color: 'var(--text-muted)'}}>({req.elo})</span></span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Pending...</span>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Pending...</span>
+                    <button className="icon-only-btn" style={{ padding: '0.2rem', color: 'var(--color-danger)' }} title="Cancel Request" onClick={() => socket.emit('cancel_friend_request', { userEmail: currentUserEmail, targetEmail: req.email })}>
+                      ✕
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

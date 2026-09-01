@@ -374,6 +374,35 @@ export function removeFriend(userEmail, friendEmail) {
   return true;
 }
 
+export function cancelFriendRequest(userEmail, targetEmail) {
+  const db = loadDb();
+  const user = userEmail.toLowerCase();
+  const target = targetEmail.toLowerCase();
+  
+  if (!db.users[user] || !db.users[target]) return false;
+  
+  let changed = false;
+  
+  if (db.users[user].sentRequests) {
+    const sentIdx = db.users[user].sentRequests.indexOf(target);
+    if (sentIdx !== -1) {
+      db.users[user].sentRequests.splice(sentIdx, 1);
+      changed = true;
+    }
+  }
+  
+  if (db.users[target].friendRequests) {
+    const reqIdx = db.users[target].friendRequests.indexOf(user);
+    if (reqIdx !== -1) {
+      db.users[target].friendRequests.splice(reqIdx, 1);
+      changed = true;
+    }
+  }
+  
+  if (changed) saveDb(db);
+  return changed;
+}
+
 export function declineFriendRequest(userEmail, senderEmail) {
   const db = loadDb();
   const user = userEmail.toLowerCase();
