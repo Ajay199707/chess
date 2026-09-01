@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Users, Award, Play, Eye, MessageSquare } from 'lucide-react';
 import { GlobalChatPanel } from './GlobalChatPanel';
 
-export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMessages = [], currentUserEmail, onSendChallenge, onNotifyPlayer, onWatchMatch, socket, playerName }) {
+export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMessages = [], currentUserEmail, onSendChallenge, onNotifyPlayer, onWatchMatch, socket, playerName, friendsData }) {
   const [selectedTimeControl, setSelectedTimeControl] = useState('blitz5');
-  const [activeTab, setActiveTab] = useState('players'); // 'players', 'matches', 'chat'
+  const [activeTab, setActiveTab] = useState('players'); // 'players', 'matches', 'chat', 'friends'
 
   // Filter out current user from the challenge options list
   const otherUsers = onlineUsers.filter(u => u.email !== currentUserEmail?.toLowerCase());
@@ -21,6 +21,12 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
           style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'players' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
         >
           <Users size={16} /> Players
+        </button>
+        <button 
+          onClick={() => setActiveTab('friends')}
+          style={{ flex: 1, background: 'none', border: 'none', color: activeTab === 'friends' ? '#f59e0b' : 'inherit', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
+        >
+          <Award size={16} /> Friends
         </button>
         <button 
           onClick={() => setActiveTab('matches')}
@@ -119,6 +125,75 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
             )}
           </div>
         </>
+      )}
+
+      {activeTab === 'friends' && (
+        <div className="friends-list" style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          
+          {friendsData?.friendRequests?.length > 0 && (
+            <div className="friend-requests-section">
+              <h4 style={{ margin: '0 0 0.5rem 0', color: '#f59e0b', fontSize: '0.85rem' }}>Pending Requests</h4>
+              {friendsData.friendRequests.map((req, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', marginBottom: '0.5rem' }}>
+                  <span>{req.name} <span style={{fontSize: '0.75rem', color: 'var(--text-muted)'}}>({req.elo})</span></span>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn-primary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => socket.emit('accept_friend_request', { userEmail: currentUserEmail, senderEmail: req.email })}>Accept</button>
+                    <button className="btn-danger" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => socket.emit('decline_friend_request', { userEmail: currentUserEmail, senderEmail: req.email })}>Decline</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="friends-section">
+            <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>My Friends</h4>
+            {(!friendsData?.friends || friendsData.friends.length === 0) ? (
+              <div className="empty-players">You haven't added any friends yet.</div>
+            ) : (
+              friendsData.friends.map((friend, i) => {
+                const isOnline = onlineUsers.some(u => u.email === friend.email.toLowerCase());
+                const friendStatus = onlineUsers.find(u => u.email === friend.email.toLowerCase())?.status;
+                
+                return (
+                  <div key={i} className="player-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', cursor: 'pointer', marginBottom: '0.5rem' }} onClick={() => {
+                    if (socket) socket.emit('request_public_profile', { email: friend.email });
+                  }}>
+                    <div className="player-details">
+                      <span className="player-name">
+                        <span className={`status-indicator ${isOnline ? 'online' : 'offline'}`} style={{ 
+                          display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', 
+                          background: isOnline ? '#10b981' : '#6b7280', marginRight: '6px' 
+                        }}></span>
+                        {friend.name}
+                      </span>
+                      <span className="player-elo">ELO: {friend.elo}</span>
+                      {isOnline && <span className="player-status" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginLeft: '14px' }}>{friendStatus === 'playing' ? 'In Game' : 'In Lobby'}</span>}
+                    </div>
+                    <div className="player-actions" onClick={(e) => e.stopPropagation()}>
+                      {isOnline && friendStatus === 'lobby' ? (
+                        <button 
+                          className="btn-primary challenge-btn"
+                          onClick={() => onSendChallenge(friend.name, friend.email, selectedTimeControl)}
+                          disabled={isCurrentUserPlaying}
+                        >
+                          <Play size={14} /> Play
+                        </button>
+                      ) : isOnline && friendStatus === 'playing' ? (
+                        <button className="btn-secondary challenge-btn" disabled>
+                          Playing
+                        </button>
+                      ) : (
+                        <button className="btn-secondary challenge-btn" disabled>
+                          Offline
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
       )}
 
       {activeTab === 'matches' && (

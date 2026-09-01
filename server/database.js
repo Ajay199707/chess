@@ -63,7 +63,9 @@ export function registerUser(name, email, password) {
       gamesPlayed: 0,
       onlineMatchesPlayed: 0,
       elo: 1200
-    }
+    },
+    friends: [],
+    friendRequests: [] // Array of emails who sent requests to this user
   };
 
   saveDb(db);
@@ -245,7 +247,7 @@ export function saveFeedback(name, email, type, rating, message) {
   return { success: true, feedbackId };
 }
 
-export function saveMatch(whiteEmail, blackEmail, whiteName, blackName, pgn, result, timeControl) {
+export function saveMatch(whiteEmail, blackEmail, whiteName, blackName, pgn, result, timeControl, whiteEloChange = 0, blackEloChange = 0) {
   const db = loadDb();
   if (!db.matches) {
     db.matches = [];
@@ -261,6 +263,8 @@ export function saveMatch(whiteEmail, blackEmail, whiteName, blackName, pgn, res
     pgn: pgn || '',
     result: result, // 'white', 'black', 'draw'
     timeControl: timeControl,
+    whiteEloChange,
+    blackEloChange,
     date: Date.now()
   };
 
@@ -301,4 +305,98 @@ export function getPublicProfile(email) {
     onlineMatchesPlayed: user.stats.onlineMatchesPlayed,
     matches: matches
   };
+}
+
+export function sendFriendRequest(senderEmail, targetEmail) {
+  const db = loadDb();
+  const sender = senderEmail.toLowerCase();
+  const target = targetEmail.toLowerCase();
+  
+  if (!db.users[sender] || !db.users[target]) return false;
+  if (sender === target) return false;
+  
+  if (!db.users[target].friendRequests) db.users[target].friendRequests = [];
+  if (!db.users[target].friends) db.users[target].friends = [];
+  
+  if (db.users[target].friends.includes(sender)) return false;
+  if (db.users[target].friendRequests.includes(sender)) return false;
+  
+  db.users[target].friendRequests.push(sender);
+  saveDb(db);
+  return true;
+}
+
+export function acceptFriendRequest(userEmail, senderEmail) {
+  const db = loadDb();
+  const user = userEmail.toLowerCase();
+  const sender = senderEmail.toLowerCase();
+  
+  if (!db.users[user] || !db.users[sender]) return false;
+  
+  if (!db.users[user].friendRequests) db.users[user].friendRequests = [];
+  if (!db.users[user].friends) db.users[user].friends = [];
+  if (!db.users[sender].friends) db.users[sender].friends = [];
+  
+  const reqIndex = db.users[user].friendRequests.indexOf(sender);
+  if (reqIndex === -1) return false;
+  
+  db.users[user].friendRequests.splice(reqIndex, 1);
+  if (!db.users[user].friends.includes(sender)) db.users[user].friends.push(sender);
+  if (!db.users[sender].friends.includes(user)) db.users[sender].friends.push(user);
+  
+  saveDb(db);
+  return true;
+}
+
+export function removeFriend(userEmail, friendEmail) {
+  const db = loadDb();
+  const user = userEmail.toLowerCase();
+  const friend = friendEmail.toLowerCase();
+  
+  if (!db.users[user] || !db.users[friend]) return false;
+  
+  if (db.users[user].friends) {
+    db.users[user].friends = db.users[user].friends.filter(e => e !== friend);
+  }
+  if (db.users[friend].friends) {
+    db.users[friend].friends = db.users[friend].friends.filter(e => e !== user);
+  }
+  
+  saveDb(db);
+  return true;
+}
+
+export function declineFriendRequest(userEmail, senderEmail) {
+  const db = loadDb();
+  const user = userEmail.toLowerCase();
+  const sender = senderEmail.toLowerCase();
+  
+  if (!db.users[user]) return false;
+  if (!db.users[user].friendRequests) return false;
+  
+  const reqIndex = db.users[user].friendRequests.indexOf(sender);
+  if (reqIndex !== -1) {
+    db.users[user].friendRequests.splice(reqIndex, 1);
+    saveDb(db);
+    return true;
+  }
+  return false;
+}
+
+export function getFriendsList(email) {
+  const db = loadDb();
+  const user = db.users[email.toLowerCase()];
+  if (!user) return { friends: [], friendRequests: [] };
+  
+  const friends = (user.friends || []).map(fEmail => {
+    const f = db.users[fEmail];
+    return f ? { name: f.name, email: fEmail, elo: f.stats.elo } : null;
+  }).filter(Boolean);
+  
+  const friendRequests = (user.friendRequests || []).map(rEmail => {
+    const f = db.users[rEmail];
+    return f ? { name: f.name, email: rEmail, elo: f.stats.elo } : null;
+  }).filter(Boolean);
+  
+  return { friends, friendRequests };
 }

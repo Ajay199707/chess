@@ -184,8 +184,8 @@ function endGameAndSaveStats(room, status, winner) {
     if (whiteRes) whiteUser.elo = whiteRes.newElo;
     if (blackRes) blackUser.elo = blackRes.newElo;
 
-    io.to(whiteSocketId).emit('stats_update', { elo: whiteUser.elo });
-    io.to(blackSocketId).emit('stats_update', { elo: blackUser.elo });
+    io.to(whiteSocketId).emit('stats_update', { elo: whiteUser.elo, eloChange: whiteRes ? whiteRes.eloChange : 0 });
+    io.to(blackSocketId).emit('stats_update', { elo: blackUser.elo, eloChange: blackRes ? blackRes.eloChange : 0 });
     
     // Generate PGN and save match record
     try {
@@ -210,7 +210,9 @@ function endGameAndSaveStats(room, status, winner) {
         blackUser.name, 
         matchGame.pgn(), 
         winner || 'draw', 
-        room.gameState.timeControl
+        room.gameState.timeControl,
+        whiteRes ? whiteRes.eloChange : 0,
+        blackRes ? blackRes.eloChange : 0
       );
     } catch (e) {
       console.error("Failed to save match history:", e);
@@ -325,6 +327,69 @@ io.on('connection', (socket) => {
     const profile = db.getPublicProfile(email);
     if (profile) {
       socket.emit('public_profile_data', profile);
+    }
+  });
+
+  socket.on('request_friends_list', ({ email }) => {
+    if (!email) return;
+    const data = db.getFriendsList(email);
+    socket.emit('friends_list_data', data);
+  });
+
+  socket.on('send_friend_request', ({ senderEmail, targetEmail }) => {
+    if (db.sendFriendRequest(senderEmail, targetEmail)) {
+      // Find target's socket and notify them directly if online
+      let targetSocketId = null;
+      for (const [sId, u] of onlineUsers.entries()) {
+        if (u.email === targetEmail.toLowerCase()) {
+          targetSocketId = sId;
+          break;
+        }
+      }
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('friend_request_received', { senderEmail });
+        io.to(targetSocketId).emit('friends_list_data', db.getFriendsList(targetEmail));
+      }
+      socket.emit('friend_request_sent', { success: true });
+    }
+  });
+
+  socket.on('accept_friend_request', ({ userEmail, senderEmail }) => {
+    if (db.acceptFriendRequest(userEmail, senderEmail)) {
+      socket.emit('friends_list_data', db.getFriendsList(userEmail));
+      // Notify sender if online
+      let targetSocketId = null;
+      for (const [sId, u] of onlineUsers.entries()) {
+        if (u.email === senderEmail.toLowerCase()) {
+          targetSocketId = sId;
+          break;
+        }
+      }
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('friends_list_data', db.getFriendsList(senderEmail));
+      }
+    }
+  });
+
+  socket.on('decline_friend_request', ({ userEmail, senderEmail }) => {
+    if (db.declineFriendRequest(userEmail, senderEmail)) {
+      socket.emit('friends_list_data', db.getFriendsList(userEmail));
+    }
+  });
+
+  socket.on('remove_friend', ({ userEmail, friendEmail }) => {
+    if (db.removeFriend(userEmail, friendEmail)) {
+      socket.emit('friends_list_data', db.getFriendsList(userEmail));
+      let targetSocketId = null;
+      for (const [sId, u] of onlineUsers.entries()) {
+        if (u.email === friendEmail.toLowerCase()) {
+          targetSocketId = sId;
+          break;
+        }
+      }
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('friends_list_data', db.getFriendsList(friendEmail));
+      }
     }
   });
 

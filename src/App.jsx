@@ -123,6 +123,7 @@ export default function App() {
   const [matchHistory, setMatchHistory] = useState([]);
   const [viewingMatch, setViewingMatch] = useState(null);
   const [publicProfileData, setPublicProfileData] = useState(null);
+  const [friendsData, setFriendsData] = useState({ friends: [], friendRequests: [] });
 
   // References
   const botTimeoutRef = useRef(null);
@@ -426,7 +427,7 @@ export default function App() {
       safeRemoveItem('chess_user_email');
     });
 
-    newSocket.on('stats_update', ({ elo }) => {
+    newSocket.on('stats_update', ({ elo, eloChange }) => {
       setUserProfile(prev => {
         if (!prev) return null;
         return {
@@ -434,6 +435,7 @@ export default function App() {
           stats: {
             ...prev.stats,
             elo,
+            lastEloChange: eloChange,
             gamesPlayed: prev.stats.gamesPlayed + 1,
             onlineMatchesPlayed: prev.stats.onlineMatchesPlayed + 1
           }
@@ -447,6 +449,26 @@ export default function App() {
 
     newSocket.on('public_profile_data', (profile) => {
       setPublicProfileData(profile);
+    });
+
+    newSocket.on('friends_list_data', (data) => {
+      setFriendsData(data);
+    });
+
+    newSocket.on('friend_request_received', ({ senderEmail }) => {
+      showToast(`${senderEmail} sent you a friend request!`);
+      // Request updated list
+      if (newSocket && newSocket.id) {
+         // but wait, we need our own email.
+         // the server automatically sends the updated list to the user when request is sent, if we set it up. 
+         // actually server only sent 'friend_request_received'. Let's just tell server to send us the list:
+         // email is tricky here because it's in a closure without current userProfile.
+         // so let's rely on server emitting `friends_list_data` automatically if possible.
+      }
+    });
+
+    newSocket.on('friend_request_sent', (res) => {
+      if (res.success) showToast("Friend request sent!");
     });
 
 
@@ -818,6 +840,12 @@ export default function App() {
       socket.emit('request_match_history', { email: userProfile.email });
     }
   }, [activeTab, isAuthenticated, socket, userProfile]);
+
+  useEffect(() => {
+    if (isAuthenticated && socket && userProfile?.email) {
+      socket.emit('request_friends_list', { email: userProfile.email });
+    }
+  }, [isAuthenticated, socket, userProfile?.email]);
 
   // --- ROOM-SPECIFIC SOCKET EVENT LISTENERS ---
   useEffect(() => {
@@ -2023,11 +2051,17 @@ export default function App() {
 
               {/* Tab: Online Players */}
               <div className="dashboard-tab-pane mobile-hidden">
-                <OnlinePlayersPanel
-                  onlineUsers={onlineUsers}
+                <OnlinePlayersPanel 
+                  onlineUsers={onlineUsers} 
+                  activeMatches={activeMatches}
+                  globalMessages={globalMessages}
                   currentUserEmail={userProfile?.email}
                   onSendChallenge={handleSendChallenge}
                   onNotifyPlayer={handleNotifyPlayer}
+                  onWatchMatch={handleJoinAsSpectator}
+                  socket={socket}
+                  playerName={playerName}
+                  friendsData={friendsData}
                 />
               </div>
             </div>
@@ -2078,6 +2112,20 @@ export default function App() {
                     {gameStatus === 'abandoned' && `Match ended by abandonment. Winner: ${winner ? winner.toUpperCase() : 'None'}`}
                   </p>
                   
+                  {gameMode === 'online-2p' && userProfile?.stats?.lastEloChange !== undefined && !isSpectator && (
+                    <div className="game-over-elo-change" style={{ margin: '0.75rem 0', padding: '0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+                        ELO: {userProfile.stats.elo} 
+                        <span style={{ 
+                          color: userProfile.stats.lastEloChange >= 0 ? 'var(--color-emerald)' : 'var(--color-danger)',
+                          marginLeft: '8px'
+                        }}>
+                          ({userProfile.stats.lastEloChange >= 0 ? '+' : ''}{userProfile.stats.lastEloChange})
+                        </span>
+                      </span>
+                    </div>
+                  )}
+
                   {gameMode === 'online-2p' ? (
                     isSpectator ? (
                       <p className="spectator-msg">Waiting for players to request rematch...</p>
@@ -2187,6 +2235,8 @@ export default function App() {
                userIsWhite: profileEmail.toLowerCase() === match.whiteEmail 
              });
           }}
+          socket={socket}
+          currentUserEmail={userProfile?.email}
         />
       )}
 

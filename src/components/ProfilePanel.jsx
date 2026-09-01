@@ -40,7 +40,19 @@ export const ProfilePanel = ({ stats, matchHistory, onResetStats, onViewReplay, 
                     </div>
                   </div>
                   <div className="match-history-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                    <span style={{ color: resultColor, fontWeight: 'bold', fontSize: '0.85rem' }}>{resultText}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ color: resultColor, fontWeight: 'bold', fontSize: '0.85rem' }}>{resultText}</span>
+                      {isWhite && match.whiteEloChange !== undefined && (
+                        <span style={{ fontSize: '0.7rem', color: match.whiteEloChange >= 0 ? 'var(--color-emerald)' : 'var(--color-danger)' }}>
+                          ({match.whiteEloChange >= 0 ? '+' : ''}{match.whiteEloChange})
+                        </span>
+                      )}
+                      {!isWhite && match.blackEloChange !== undefined && (
+                        <span style={{ fontSize: '0.7rem', color: match.blackEloChange >= 0 ? 'var(--color-emerald)' : 'var(--color-danger)' }}>
+                          ({match.blackEloChange >= 0 ? '+' : ''}{match.blackEloChange})
+                        </span>
+                      )}
+                    </div>
                     <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>as {isWhite ? 'White' : 'Black'}</span>
                   </div>
                 </div>
