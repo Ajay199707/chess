@@ -455,16 +455,9 @@ export default function App() {
       setFriendsData(data);
     });
 
-    newSocket.on('friend_request_received', ({ senderEmail }) => {
-      showToast(`${senderEmail} sent you a friend request!`);
-      // Request updated list
-      if (newSocket && newSocket.id) {
-         // but wait, we need our own email.
-         // the server automatically sends the updated list to the user when request is sent, if we set it up. 
-         // actually server only sent 'friend_request_received'. Let's just tell server to send us the list:
-         // email is tricky here because it's in a closure without current userProfile.
-         // so let's rely on server emitting `friends_list_data` automatically if possible.
-      }
+    newSocket.on('friend_request_received', ({ senderEmail, senderName }) => {
+      const displayName = senderName || senderEmail.split('@')[0];
+      showToast(`${displayName} sent you a friend request!`);
     });
 
     newSocket.on('friend_request_sent', (res) => {

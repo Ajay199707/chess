@@ -338,6 +338,15 @@ io.on('connection', (socket) => {
 
   socket.on('send_friend_request', ({ senderEmail, targetEmail }) => {
     if (db.sendFriendRequest(senderEmail, targetEmail)) {
+      // Get sender name for the toast
+      let senderName = senderEmail;
+      for (const [sId, u] of onlineUsers.entries()) {
+        if (u.email === senderEmail.toLowerCase()) {
+          senderName = u.name;
+          break;
+        }
+      }
+
       // Find target's socket and notify them directly if online
       let targetSocketId = null;
       for (const [sId, u] of onlineUsers.entries()) {
@@ -347,7 +356,7 @@ io.on('connection', (socket) => {
         }
       }
       if (targetSocketId) {
-        io.to(targetSocketId).emit('friend_request_received', { senderEmail });
+        io.to(targetSocketId).emit('friend_request_received', { senderEmail, senderName });
         io.to(targetSocketId).emit('friends_list_data', db.getFriendsList(targetEmail));
       }
       socket.emit('friend_request_sent', { success: true });
