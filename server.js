@@ -351,6 +351,7 @@ io.on('connection', (socket) => {
         io.to(targetSocketId).emit('friends_list_data', db.getFriendsList(targetEmail));
       }
       socket.emit('friend_request_sent', { success: true });
+      socket.emit('friends_list_data', db.getFriendsList(senderEmail));
     }
   });
 

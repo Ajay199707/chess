@@ -156,7 +156,7 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
           
           {friendsData?.friendRequests?.length > 0 && (
             <div className="friend-requests-section">
-              <h4 style={{ margin: '0 0 0.5rem 0', color: '#f59e0b', fontSize: '0.85rem' }}>Pending Requests</h4>
+              <h4 style={{ margin: '0 0 0.5rem 0', color: '#f59e0b', fontSize: '0.85rem' }}>Incoming Requests</h4>
               {friendsData.friendRequests.map((req, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', marginBottom: '0.5rem' }}>
                   <span>{req.name} <span style={{fontSize: '0.75rem', color: 'var(--text-muted)'}}>({req.elo})</span></span>
@@ -164,6 +164,18 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
                     <button className="btn-primary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => socket.emit('accept_friend_request', { userEmail: currentUserEmail, senderEmail: req.email })}>Accept</button>
                     <button className="btn-danger" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => socket.emit('decline_friend_request', { userEmail: currentUserEmail, senderEmail: req.email })}>Decline</button>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {friendsData?.sentRequests?.length > 0 && (
+            <div className="friend-requests-section">
+              <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Sent Requests</h4>
+              {friendsData.sentRequests.map((req, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', marginBottom: '0.5rem' }}>
+                  <span>{req.name} <span style={{fontSize: '0.75rem', color: 'var(--text-muted)'}}>({req.elo})</span></span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Pending...</span>
                 </div>
               ))}
             </div>

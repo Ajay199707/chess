@@ -316,12 +316,16 @@ export function sendFriendRequest(senderEmail, targetEmail) {
   if (sender === target) return false;
   
   if (!db.users[target].friendRequests) db.users[target].friendRequests = [];
+  if (!db.users[sender].sentRequests) db.users[sender].sentRequests = [];
   if (!db.users[target].friends) db.users[target].friends = [];
   
   if (db.users[target].friends.includes(sender)) return false;
   if (db.users[target].friendRequests.includes(sender)) return false;
   
   db.users[target].friendRequests.push(sender);
+  if (!db.users[sender].sentRequests.includes(target)) {
+    db.users[sender].sentRequests.push(target);
+  }
   saveDb(db);
   return true;
 }
@@ -343,6 +347,10 @@ export function acceptFriendRequest(userEmail, senderEmail) {
   db.users[user].friendRequests.splice(reqIndex, 1);
   if (!db.users[user].friends.includes(sender)) db.users[user].friends.push(sender);
   if (!db.users[sender].friends.includes(user)) db.users[sender].friends.push(user);
+  
+  if (db.users[sender].sentRequests) {
+    db.users[sender].sentRequests = db.users[sender].sentRequests.filter(e => e !== user);
+  }
   
   saveDb(db);
   return true;
@@ -377,6 +385,9 @@ export function declineFriendRequest(userEmail, senderEmail) {
   const reqIndex = db.users[user].friendRequests.indexOf(sender);
   if (reqIndex !== -1) {
     db.users[user].friendRequests.splice(reqIndex, 1);
+    if (db.users[sender] && db.users[sender].sentRequests) {
+      db.users[sender].sentRequests = db.users[sender].sentRequests.filter(e => e !== user);
+    }
     saveDb(db);
     return true;
   }
@@ -386,7 +397,7 @@ export function declineFriendRequest(userEmail, senderEmail) {
 export function getFriendsList(email) {
   const db = loadDb();
   const user = db.users[email.toLowerCase()];
-  if (!user) return { friends: [], friendRequests: [] };
+  if (!user) return { friends: [], friendRequests: [], sentRequests: [] };
   
   const friends = (user.friends || []).map(fEmail => {
     const f = db.users[fEmail];
@@ -398,5 +409,10 @@ export function getFriendsList(email) {
     return f ? { name: f.name, email: rEmail, elo: f.stats.elo } : null;
   }).filter(Boolean);
   
-  return { friends, friendRequests };
+  const sentRequests = (user.sentRequests || []).map(rEmail => {
+    const f = db.users[rEmail];
+    return f ? { name: f.name, email: rEmail, elo: f.stats.elo } : null;
+  }).filter(Boolean);
+  
+  return { friends, friendRequests, sentRequests };
 }
