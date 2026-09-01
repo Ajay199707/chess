@@ -1400,6 +1400,17 @@ export default function App() {
         onSubmit={handleSubmitFeedback} 
       />
 
+      {/* Global Profile Badge */}
+      {isAuthenticated && userProfile && (
+        <button 
+          className="global-profile-badge"
+          onClick={() => socket && socket.emit('request_public_profile', { email: userProfile.email })}
+          title="My Profile"
+        >
+          {userProfile.name.substring(0, 2).toUpperCase()}
+        </button>
+      )}
+
       {/* Main Container */}
       <div className="game-container">
         
