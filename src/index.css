@@ -2579,7 +2579,7 @@ body.mode-light .captured-badge-count {
     display: grid;
     grid-template-columns: 1fr 300px;
     gap: 1.5rem;
-    align-items: start;
+    align-items: stretch;
   }
 }
 
@@ -2601,6 +2601,8 @@ body.mode-light .welcome-greeting {
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 /* --- ONLINE PLAYERS PANEL & LIST --- */
@@ -2608,6 +2610,7 @@ body.mode-light .welcome-greeting {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  flex: 1;
 }
 
 .online-players-panel .challenge-settings {
