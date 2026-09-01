@@ -249,7 +249,7 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
                       {isOnline && friendStatus === 'lobby' ? (
                         <button 
                           className="btn-primary challenge-btn"
-                          onClick={() => onSendChallenge(friend.name, friend.email, selectedTimeControl)}
+                          onClick={() => onSendChallenge(friend.email, friend.name, selectedTimeControl)}
                           disabled={isCurrentUserPlaying}
                         >
                           <Play size={14} /> Play
