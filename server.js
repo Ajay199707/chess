@@ -186,6 +186,35 @@ function endGameAndSaveStats(room, status, winner) {
 
     io.to(whiteSocketId).emit('stats_update', { elo: whiteUser.elo });
     io.to(blackSocketId).emit('stats_update', { elo: blackUser.elo });
+    
+    // Generate PGN and save match record
+    try {
+      const matchGame = new Chess();
+      if (room.gameState.history && Array.isArray(room.gameState.history)) {
+        for (const m of room.gameState.history) {
+          try { matchGame.move(m); } catch (e) { /* ignore */ }
+        }
+      }
+      
+      let pgnResult = '*';
+      if (winner === 'white') pgnResult = '1-0';
+      else if (winner === 'black') pgnResult = '0-1';
+      else if (winner === null) pgnResult = '1/2-1/2';
+      
+      matchGame.header('White', whiteUser.name, 'Black', blackUser.name, 'Result', pgnResult);
+      
+      db.saveMatch(
+        whiteUser.email, 
+        blackUser.email, 
+        whiteUser.name, 
+        blackUser.name, 
+        matchGame.pgn(), 
+        winner || 'draw', 
+        room.gameState.timeControl
+      );
+    } catch (e) {
+      console.error("Failed to save match history:", e);
+    }
   }
 
   if (whiteUser) whiteUser.status = 'lobby';
@@ -283,6 +312,12 @@ io.on('connection', (socket) => {
     loggedInEmail = null;
     broadcastOnlineUsers();
     socket.emit('logged_out');
+  });
+
+  socket.on('request_match_history', ({ email }) => {
+    if (!email) return;
+    const matches = db.getUserMatches(email);
+    socket.emit('match_history_data', matches);
   });
 
   socket.on('submit_feedback', ({ type, rating, message }) => {

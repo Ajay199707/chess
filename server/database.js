@@ -244,3 +244,42 @@ export function saveFeedback(name, email, type, rating, message) {
   saveDb(db);
   return { success: true, feedbackId };
 }
+
+export function saveMatch(whiteEmail, blackEmail, whiteName, blackName, pgn, result, timeControl) {
+  const db = loadDb();
+  if (!db.matches) {
+    db.matches = [];
+  }
+  
+  const matchId = 'm_' + crypto.randomBytes(6).toString('hex');
+  const matchRecord = {
+    id: matchId,
+    whiteEmail: whiteEmail ? whiteEmail.toLowerCase() : null,
+    blackEmail: blackEmail ? blackEmail.toLowerCase() : null,
+    whiteName: whiteName || 'Guest',
+    blackName: blackName || 'Guest',
+    pgn: pgn || '',
+    result: result, // 'white', 'black', 'draw'
+    timeControl: timeControl,
+    date: Date.now()
+  };
+
+  db.matches.push(matchRecord);
+  saveDb(db);
+  return matchRecord;
+}
+
+export function getUserMatches(email) {
+  const db = loadDb();
+  if (!db.matches) return [];
+  
+  const targetEmail = email.toLowerCase();
+  
+  // Filter matches involving this user, sort newest first, limit to 50
+  const userMatches = db.matches
+    .filter(m => m.whiteEmail === targetEmail || m.blackEmail === targetEmail)
+    .sort((a, b) => b.date - a.date)
+    .slice(0, 50);
+    
+  return userMatches;
+}

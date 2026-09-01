@@ -12,9 +12,12 @@ import { Chessboard } from './components/Chessboard';
 import { ChatPanel } from './components/ChatPanel';
 import { GlobalChatPanel } from './components/GlobalChatPanel';
 import { Guidelines } from './components/Guidelines';
-import { LoginScreen } from './components/LoginScreen';
 import { OnlinePlayersPanel } from './components/OnlinePlayersPanel';
+import { ProfilePanel } from './components/ProfilePanel';
+import { ReplayViewerModal } from './components/ReplayViewerModal';
+import { LoginScreen } from './components/LoginScreen';
 import { FeedbackModal } from './components/FeedbackModal';
+import './index.css';
 import { getBestMove } from './utils/chessAI';
 import { playSound } from './utils/audio';
 
@@ -116,6 +119,8 @@ export default function App() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [nextMatchNotifications, setNextMatchNotifications] = useState([]); // [{ id, name, email }]
   const [premove, setPremove] = useState(null); // { from, to, promotion }
+  const [matchHistory, setMatchHistory] = useState([]);
+  const [viewingMatch, setViewingMatch] = useState(null);
 
   // References
   const botTimeoutRef = useRef(null);
@@ -433,6 +438,11 @@ export default function App() {
         };
       });
     });
+
+    newSocket.on('match_history_data', (matches) => {
+      setMatchHistory(matches);
+    });
+
 
     newSocket.on('feedback_response', (res) => {
       if (res.success) {
@@ -796,6 +806,12 @@ export default function App() {
   const handleStartGame = () => {
     if (socket) socket.emit('start_game');
   };
+
+  useEffect(() => {
+    if (activeTab === 'stats' && isAuthenticated && socket && userProfile?.email) {
+      socket.emit('request_match_history', { email: userProfile.email });
+    }
+  }, [activeTab, isAuthenticated, socket, userProfile]);
 
   // --- ROOM-SPECIFIC SOCKET EVENT LISTENERS ---
   useEffect(() => {
@@ -1674,7 +1690,7 @@ export default function App() {
                 className={activeTab === 'stats' ? 'active' : ''} 
                 onClick={() => setActiveTab('stats')}
               >
-                Stats
+                Profile
               </button>
             </div>
 
@@ -1985,61 +2001,18 @@ export default function App() {
 
               {/* Tab: Local Stats */}
               <div className={`dashboard-tab-pane ${activeTab === 'stats' ? 'active mobile-visible' : 'mobile-hidden'}`}>
-                <div className="stats-panel">
-                  <div className="panel-header">
-                    <Trophy size={18} className="text-gold" />
-                    <h3>🏆 Statistics & Standings</h3>
-                  </div>
-
-                  <div className="stats-section current-elo-banner">
-                    <h4>Current ELO Rating</h4>
-                    <span className="elo-score-val">{stats.elo || 1200}</span>
-                  </div>
-
-                  <div className="stats-section">
-                    <h4>🤖 vs Chess Bot AI</h4>
-                    <div className="stats-row">
-                      <span>Easy:</span>
-                      <strong>{stats.vsBot.easy.wins}W - {stats.vsBot.easy.losses}L - {stats.vsBot.easy.draws}D</strong>
-                    </div>
-                    <div className="stats-row">
-                      <span>Medium:</span>
-                      <strong>{stats.vsBot.medium.wins}W - {stats.vsBot.medium.losses}L - {stats.vsBot.medium.draws}D</strong>
-                    </div>
-                    <div className="stats-row">
-                      <span>Hard:</span>
-                      <strong>{stats.vsBot.hard.wins}W - {stats.vsBot.hard.losses}L - {stats.vsBot.hard.draws}D</strong>
-                    </div>
-                  </div>
-
-                  <div className="stats-section">
-                    <h4>👥 Pass & Play (Local)</h4>
-                    <div className="stats-row">
-                      <span>Wins P1 / P2:</span>
-                      <strong>{stats.local.p1Wins}W - {stats.local.p2Wins}W - {stats.local.draws}D</strong>
-                    </div>
-                  </div>
-
-                  <div className="stats-section">
-                    <h4>🌐 Online Matches</h4>
-                    <div className="stats-row">
-                      <span>Overall:</span>
-                      <strong>{stats.online.wins}W - {stats.online.losses}L - {stats.online.draws}D</strong>
-                    </div>
-                  </div>
-
-                  <button 
-                    className="btn-outline-gold full-width"
-                    onClick={() => {
-                      if (window.confirm("Reset all statistics?")) {
-                        setStats(DEFAULT_STATS);
-                        showToast("Stats reset successfully.");
-                      }
-                    }}
-                  >
-                    Reset Statistics
-                  </button>
-                </div>
+                <ProfilePanel 
+                  stats={stats} 
+                  userProfile={userProfile}
+                  matchHistory={matchHistory}
+                  onViewReplay={(match) => setViewingMatch(match)}
+                  onResetStats={() => {
+                    if (window.confirm("Reset all statistics?")) {
+                      setStats(DEFAULT_STATS);
+                      showToast("Stats reset successfully.");
+                    }
+                  }}
+                />
               </div>
 
               {/* Tab: Online Players */}
@@ -2192,11 +2165,17 @@ export default function App() {
                 </div>
               )}
             </div>
-
           </div>
         )}
 
       </div>
+      
+      {viewingMatch && (
+        <ReplayViewerModal 
+          match={{...viewingMatch, userIsWhite: userProfile?.email?.toLowerCase() === viewingMatch.whiteEmail}} 
+          onClose={() => setViewingMatch(null)} 
+        />
+      )}
     </div>
   );
 }
