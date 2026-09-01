@@ -439,8 +439,31 @@ io.on('connection', (socket) => {
     }
 
     if (accept) {
-      // Create new match room code
+      // Create new match room
       const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const tc = challenge.timeControl || 'casual';
+      
+      rooms.set(roomId, {
+        id: roomId,
+        hostSocketId: challenge.challengerSocketId,
+        players: {
+          white: null,
+          black: null,
+        },
+        spectators: [],
+        gameState: {
+          fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+          history: [],
+          timeControl: tc,
+          clocks: {
+            white: getInitialTime(tc),
+            black: getInitialTime(tc),
+            lastActive: null,
+          },
+          status: 'waiting',
+          winner: null,
+        }
+      });
       
       // Update statuses to playing
       const challengerUser = onlineUsers.get(challenge.challengerSocketId);
