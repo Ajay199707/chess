@@ -24,7 +24,7 @@ export const GlobalChatPanel = ({ socket, playerName, globalMessages = [] }) => 
   };
 
   return (
-    <div className="chat-panel global-chat-panel">
+    <div className="chat-panel global-chat-panel" style={{ height: '100%' }}>
       <div className="chat-header">
         <Globe size={18} className="text-gold" />
         <h3>Global Lobby Chat</h3>
@@ -61,7 +61,7 @@ export const GlobalChatPanel = ({ socket, playerName, globalMessages = [] }) => 
         <div ref={chatEndRef} />
       </div>
 
-      <div className="chat-input-area">
+      <div className="chat-input-row">
         <input
           type="text"
           value={message}
@@ -70,7 +70,7 @@ export const GlobalChatPanel = ({ socket, playerName, globalMessages = [] }) => 
           placeholder="Type a message..."
           maxLength={150}
         />
-        <button className="chat-send-btn" onClick={sendMessage} disabled={!message.trim()}>
+        <button className="send-message-btn" onClick={sendMessage} disabled={!message.trim()}>
           <Send size={18} />
         </button>
       </div>
