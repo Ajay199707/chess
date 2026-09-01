@@ -64,7 +64,18 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
                   const isPlaying = player.status === 'playing';
                   return (
                     <div key={player.email} className={`online-player-row ${isPlaying ? 'in-game' : ''}`}>
-                      <div className="player-info">
+                      <div 
+                        className="player-info" 
+                        style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+                        onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'}
+                        onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+                        onClick={() => {
+                          if (socket) {
+                            socket.emit('request_public_profile', { email: player.email });
+                          }
+                        }}
+                        title={`View ${player.name}'s Profile`}
+                      >
                         <span className="player-status-indicator"></span>
                         <div className="player-details">
                           <span className="player-name-text">{player.name}</span>

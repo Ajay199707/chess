@@ -1,0 +1,66 @@
+import React from 'react';
+import { Trophy, History, X } from 'lucide-react';
+
+export const PublicProfileModal = ({ profile, onClose, onViewReplay }) => {
+  if (!profile) return null;
+
+  return (
+    <div className="login-overlay-container" style={{ zIndex: 1050 }}>
+      <div className="login-card" style={{ maxWidth: '400px', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
+        
+        <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Trophy size={18} className="text-gold" />
+            <h3 style={{ margin: 0 }}>Player Profile</h3>
+          </div>
+          <button className="icon-only-btn" onClick={onClose}><X size={20} /></button>
+        </div>
+
+        <div className="stats-section current-elo-banner" style={{ background: 'rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '1rem', textAlign: 'center', marginBottom: '1rem' }}>
+          <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-gold)' }}>{profile.name}</h4>
+          <span className="elo-score-val" style={{ fontSize: '2rem', fontWeight: 'bold' }}>{profile.elo || 1200}</span>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            {profile.onlineMatchesPlayed} Online Matches Played
+          </div>
+        </div>
+
+        <div className="stats-section match-history-section">
+          <h4 style={{ marginBottom: '0.5rem', color: 'var(--color-gold)' }}><History size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }}/> Recent Matches</h4>
+          
+          <div className="match-history-list" style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {(!profile.matches || profile.matches.length === 0) ? (
+              <div className="empty-moves" style={{ padding: '1rem 0', textAlign: 'center', color: 'var(--text-muted)' }}>No recent online matches.</div>
+            ) : (
+              profile.matches.map((match) => {
+                const isWhite = profile.email.toLowerCase() === match.whiteEmail;
+                const opponentName = isWhite ? match.blackName : match.whiteName;
+                const resultColor = 
+                  (match.result === 'white' && isWhite) || (match.result === 'black' && !isWhite) ? 'var(--color-emerald)' :
+                  (match.result === 'draw' ? 'var(--text-muted)' : 'var(--color-danger)');
+                const resultText = 
+                  (match.result === 'white' && isWhite) || (match.result === 'black' && !isWhite) ? 'WIN' :
+                  (match.result === 'draw' ? 'DRAW' : 'LOSS');
+
+                return (
+                  <div key={match.id} className="match-history-card" onClick={() => onViewReplay(match, profile.email)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', cursor: 'pointer' }}>
+                    <div className="match-history-left" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <div className="match-opponent" style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>vs {opponentName}</div>
+                      <div className="match-meta" style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                        {new Date(match.date).toLocaleDateString()} • {match.timeControl}
+                      </div>
+                    </div>
+                    <div className="match-history-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                      <span style={{ color: resultColor, fontWeight: 'bold', fontSize: '0.85rem' }}>{resultText}</span>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>as {isWhite ? 'White' : 'Black'}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};

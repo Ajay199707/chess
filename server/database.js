@@ -283,3 +283,22 @@ export function getUserMatches(email) {
     
   return userMatches;
 }
+
+export function getPublicProfile(email) {
+  const db = loadDb();
+  const targetEmail = email.toLowerCase().trim();
+  const user = db.users[targetEmail];
+  
+  if (!user) return null;
+  
+  const matches = getUserMatches(targetEmail);
+  
+  return {
+    name: user.name,
+    email: targetEmail,
+    elo: user.stats.elo,
+    gamesPlayed: user.stats.gamesPlayed,
+    onlineMatchesPlayed: user.stats.onlineMatchesPlayed,
+    matches: matches
+  };
+}

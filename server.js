@@ -320,6 +320,14 @@ io.on('connection', (socket) => {
     socket.emit('match_history_data', matches);
   });
 
+  socket.on('request_public_profile', ({ email }) => {
+    if (!email) return;
+    const profile = db.getPublicProfile(email);
+    if (profile) {
+      socket.emit('public_profile_data', profile);
+    }
+  });
+
   socket.on('submit_feedback', ({ type, rating, message }) => {
     const user = onlineUsers.get(socket.id);
     const name = user ? user.name : 'Guest';

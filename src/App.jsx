@@ -15,6 +15,7 @@ import { Guidelines } from './components/Guidelines';
 import { OnlinePlayersPanel } from './components/OnlinePlayersPanel';
 import { ProfilePanel } from './components/ProfilePanel';
 import { ReplayViewerModal } from './components/ReplayViewerModal';
+import { PublicProfileModal } from './components/PublicProfileModal';
 import { LoginScreen } from './components/LoginScreen';
 import { FeedbackModal } from './components/FeedbackModal';
 import './index.css';
@@ -121,6 +122,7 @@ export default function App() {
   const [premove, setPremove] = useState(null); // { from, to, promotion }
   const [matchHistory, setMatchHistory] = useState([]);
   const [viewingMatch, setViewingMatch] = useState(null);
+  const [publicProfileData, setPublicProfileData] = useState(null);
 
   // References
   const botTimeoutRef = useRef(null);
@@ -441,6 +443,10 @@ export default function App() {
 
     newSocket.on('match_history_data', (matches) => {
       setMatchHistory(matches);
+    });
+
+    newSocket.on('public_profile_data', (profile) => {
+      setPublicProfileData(profile);
     });
 
 
@@ -2170,9 +2176,26 @@ export default function App() {
 
       </div>
       
+      {publicProfileData && (
+        <PublicProfileModal 
+          profile={publicProfileData}
+          onClose={() => setPublicProfileData(null)}
+          onViewReplay={(match, profileEmail) => {
+             // We can open the replay viewer directly from here!
+             setViewingMatch({
+               ...match, 
+               userIsWhite: profileEmail.toLowerCase() === match.whiteEmail 
+             });
+          }}
+        />
+      )}
+
       {viewingMatch && (
         <ReplayViewerModal 
-          match={{...viewingMatch, userIsWhite: userProfile?.email?.toLowerCase() === viewingMatch.whiteEmail}} 
+          match={{
+            ...viewingMatch, 
+            userIsWhite: viewingMatch.userIsWhite !== undefined ? viewingMatch.userIsWhite : (userProfile?.email?.toLowerCase() === viewingMatch.whiteEmail)
+          }} 
           onClose={() => setViewingMatch(null)} 
         />
       )}
