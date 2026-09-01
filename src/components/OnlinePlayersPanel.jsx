@@ -164,30 +164,6 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
 
       {activeTab === 'friends' && (
         <div className="friends-list" style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div className="add-friend-section" style={{ marginBottom: '0.5rem' }}>
-            <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-gold)', fontSize: '0.85rem' }}>Add a Friend</h4>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-              <input 
-                type="email" 
-                placeholder="Enter friend's email..." 
-                id="add-friend-input"
-                style={{ flex: 1, minWidth: 0, padding: '0.375rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-app)', color: 'var(--text-main)', fontSize: '1rem', boxSizing: 'border-box' }}
-              />
-              <button 
-                className="btn-primary"
-                style={{ padding: '0 1rem', height: 'auto' }}
-                onClick={() => {
-                  const input = document.getElementById('add-friend-input');
-                  if (input && input.value.trim() !== '' && socket && currentUserEmail) {
-                    socket.emit('send_friend_request', { senderEmail: currentUserEmail, targetEmail: input.value.trim() });
-                    input.value = '';
-                  }
-                }}
-              >
-                Send
-              </button>
-            </div>
-          </div>
           
           {friendsData?.friendRequests?.length > 0 && (
             <div className="friend-requests-section">
