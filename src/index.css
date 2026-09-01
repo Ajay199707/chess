@@ -1173,6 +1173,8 @@ body {
   border-top: 1px solid var(--border-color);
   position: relative;
   gap: 0.375rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .emoji-toggle-btn {
@@ -1209,6 +1211,7 @@ body {
 
 .chat-input-row input {
   flex-grow: 1;
+  min-width: 0;
   background: var(--bg-app);
   border: 1px solid var(--border-color);
   color: var(--text-main);
