@@ -2741,13 +2741,16 @@ body.mode-light .welcome-greeting {
   display: flex;
   align-items: center;
   gap: 0.625rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .player-status-indicator {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #10b981; /* Green status dot */
+  background: var(--color-emerald);
+  flex-shrink: 0;
 }
 
 .online-player-row.in-game .player-status-indicator {
@@ -2758,6 +2761,7 @@ body.mode-light .welcome-greeting {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
+  min-width: 0;
 }
 
 .player-name-text {
@@ -2765,6 +2769,9 @@ body.mode-light .welcome-greeting {
   font-weight: 600;
   color: var(--text-main);
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .player-elo-text {
@@ -3163,3 +3170,4 @@ body.mode-light .next-match-notification-bubble {
     border-width: 1px;
   }
 }
+.player-action { flex-shrink: 0; }
