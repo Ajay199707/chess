@@ -2036,7 +2036,7 @@ export default function App() {
             <div className="right-column">
               {/* Online Game Prompts / Notifications inside dashboard */}
               {(drawOfferPending || undoRequestPending || (restartOfferPending && gameStatus === 'playing')) && (
-                <div className="dialog-alert-card animate-slide-up">
+                <div className="dialog-alert-card animate-fade-in">
                   {drawOfferPending && (
                     <div className="alert-content">
                       <p>Opponent offered a Draw.</p>
