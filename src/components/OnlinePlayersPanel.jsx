@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Award, Play, Eye, MessageSquare } from 'lucide-react';
+import { Users, Award, Play, Eye, MessageSquare, UserPlus, Check } from 'lucide-react';
 import { GlobalChatPanel } from './GlobalChatPanel';
 
 export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMessages = [], currentUserEmail, onSendChallenge, onNotifyPlayer, onWatchMatch, socket, playerName, friendsData }) {
@@ -91,7 +91,38 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
                         </div>
                       </div>
 
-                      <div className="player-action">
+                      <div className="player-action" style={{ display: 'flex', gap: '0.375rem', alignItems: 'center' }}>
+                        {currentUserEmail && (
+                          (() => {
+                            const isFriend = friendsData?.friends?.some(f => f.email.toLowerCase() === player.email.toLowerCase());
+                            const hasSent = friendsData?.sentRequests?.some(r => r.email.toLowerCase() === player.email.toLowerCase());
+                            const hasIncoming = friendsData?.friendRequests?.some(r => r.email.toLowerCase() === player.email.toLowerCase());
+                            
+                            if (isFriend) {
+                              return <span className="status-tag" style={{ background: 'transparent', border: '1px solid var(--color-emerald)', color: 'var(--color-emerald)', padding: '0.2rem 0.3rem' }} title="Friend"><Check size={12} /></span>;
+                            }
+                            if (hasSent) {
+                              return <span className="status-tag" style={{ background: 'transparent', border: '1px solid var(--text-muted)', color: 'var(--text-muted)', padding: '0.2rem 0.3rem' }} title="Request sent">...</span>;
+                            }
+                            if (hasIncoming) {
+                              return null;
+                            }
+                            
+                            return (
+                              <button
+                                className="btn-secondary"
+                                style={{ padding: '0.25rem 0.375rem', height: 'auto', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--color-gold)' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (socket) socket.emit('send_friend_request', { senderEmail: currentUserEmail, targetEmail: player.email });
+                                }}
+                                title="Add Friend"
+                              >
+                                <UserPlus size={14} />
+                              </button>
+                            );
+                          })()
+                        )}
                         {isPlaying ? (
                           <div className="in-game-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                             <span className="status-tag playing">In Match</span>
@@ -100,7 +131,7 @@ export function OnlinePlayersPanel({ onlineUsers, activeMatches = [], globalMess
                                 className="btn-challenge-primary btn-notify-next"
                                 onClick={() => onNotifyPlayer && onNotifyPlayer(player.email, player.name)}
                                 title={`Notify ${player.name} that you're waiting for next match`}
-                                style={{ padding: '0.375rem 0.5rem', background: '#3b82f6', color: 'white' }}
+                                style={{ padding: '0.25rem 0.5rem', background: '#3b82f6', color: 'white' }}
                               >
                                 🔔 Notify
                               </button>
