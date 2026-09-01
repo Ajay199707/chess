@@ -1367,7 +1367,7 @@ export default function App() {
               <h4>Challenge Received!</h4>
             </div>
             <p>
-              <strong>{activeChallengeRequest.challengerName}</strong> has challenged you to a <strong>{activeChallengeRequest.timeControl.toUpperCase()}</strong> match!
+              <strong>{activeChallengeRequest.challengerName}</strong> has challenged you to a <strong>{activeChallengeRequest.timeControl?.toUpperCase()}</strong> match!
             </p>
             <div className="challenge-actions">
               <button 
