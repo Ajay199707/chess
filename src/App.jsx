@@ -5,7 +5,7 @@ import {
   Play, Users, Award, BookOpen, Volume2, VolumeX, 
   RotateCcw, Shield, HelpCircle, Trophy, Copy, Check,
   LogOut, ArrowLeftRight, Settings, Send, Sun, Moon, Coins,
-  MessageSquarePlus, X, Bell, BellOff
+  MessageSquarePlus, X, Bell, BellOff, Coffee
 } from 'lucide-react';
 
 import { Chessboard } from './components/Chessboard';
