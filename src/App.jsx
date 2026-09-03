@@ -2128,6 +2128,41 @@ export default function App() {
 
             {/* Column 1 (Left): Moves & Stats */}
             <div className="left-column">
+              {/* Tab: Local Stats */}
+              <div className={`dashboard-tab-pane ${activeTab === 'stats' ? 'active mobile-visible' : 'mobile-hidden'}`}>
+                <ProfilePanel 
+                  stats={stats} 
+                  userProfile={userProfile}
+                  matchHistory={matchHistory}
+                  onViewReplay={(match) => setViewingMatch(match)}
+                  onResetStats={() => {
+                    if (window.confirm("Reset all statistics?")) {
+                      setStats(DEFAULT_STATS);
+                      showToast("Stats reset successfully.");
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Tab: Online Players */}
+              <div className="dashboard-tab-pane mobile-hidden">
+                <OnlinePlayersPanel 
+                  onlineUsers={onlineUsers} 
+                  activeMatches={activeMatches}
+                  globalMessages={globalMessages}
+                  currentUserEmail={userProfile?.email}
+                  onSendChallenge={handleSendChallenge}
+                  onNotifyPlayer={handleNotifyPlayer}
+                  onWatchMatch={(roomId) => socket.emit('join_room', { roomCode: roomId, role: 'spectator' })}
+                  socket={socket}
+                  playerName={playerName}
+                  friendsData={friendsData}
+                />
+              </div>
+            </div>
+
+            {/* Column 3 (Right): Actions & Chat */}
+            <div className="right-column">
               {/* Tab: Move Log List */}
               <div className={`dashboard-tab-pane ${activeTab === 'moves' ? 'active mobile-visible' : 'mobile-hidden'}`}>
                 <div className="moves-log-panel">
@@ -2166,41 +2201,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Tab: Local Stats */}
-              <div className={`dashboard-tab-pane ${activeTab === 'stats' ? 'active mobile-visible' : 'mobile-hidden'}`}>
-                <ProfilePanel 
-                  stats={stats} 
-                  userProfile={userProfile}
-                  matchHistory={matchHistory}
-                  onViewReplay={(match) => setViewingMatch(match)}
-                  onResetStats={() => {
-                    if (window.confirm("Reset all statistics?")) {
-                      setStats(DEFAULT_STATS);
-                      showToast("Stats reset successfully.");
-                    }
-                  }}
-                />
-              </div>
-
-              {/* Tab: Online Players */}
-              <div className="dashboard-tab-pane mobile-hidden">
-                <OnlinePlayersPanel 
-                  onlineUsers={onlineUsers} 
-                  activeMatches={activeMatches}
-                  globalMessages={globalMessages}
-                  currentUserEmail={userProfile?.email}
-                  onSendChallenge={handleSendChallenge}
-                  onNotifyPlayer={handleNotifyPlayer}
-                  onWatchMatch={(roomId) => socket.emit('join_room', { roomCode: roomId, role: 'spectator' })}
-                  socket={socket}
-                  playerName={playerName}
-                  friendsData={friendsData}
-                />
-              </div>
-            </div>
-
-            {/* Column 3 (Right): Actions & Chat */}
-            <div className="right-column">
               {/* Online Game Prompts / Notifications inside dashboard */}
               {(drawOfferPending || undoRequestPending || (restartOfferPending && gameStatus === 'playing')) && (
                 <div className="dialog-alert-card animate-fade-in">
