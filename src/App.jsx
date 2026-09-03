@@ -2413,9 +2413,9 @@ export default function App() {
       )}
 
       {showUpiModal && (
-        <div className="modal-overlay" onClick={() => setShowUpiModal(false)}>
-          <div className="modal-content animate-scale-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', textAlign: 'center', padding: '2rem' }}>
-            <button className="btn-close" onClick={() => setShowUpiModal(false)}>
+        <div className="challenge-request-overlay" style={{ zIndex: 1200 }} onClick={() => setShowUpiModal(false)}>
+          <div className="challenge-card animate-scale-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', textAlign: 'center', padding: '2rem', position: 'relative' }}>
+            <button className="icon-only-btn" style={{ position: 'absolute', top: '10px', right: '10px' }} onClick={() => setShowUpiModal(false)}>
               <X size={20} />
             </button>
             <h2 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
