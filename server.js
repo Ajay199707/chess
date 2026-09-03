@@ -337,7 +337,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('send_friend_request', ({ senderEmail, targetEmail }) => {
-    if (db.sendFriendRequest(senderEmail, targetEmail)) {
+    io.emit('chat_message', { sender: 'System', text: `Debug [send]: sender=${senderEmail}, target=${targetEmail}` });
+    const success = db.sendFriendRequest(senderEmail, targetEmail);
+    io.emit('chat_message', { sender: 'System', text: `Debug [send result]: success=${success}` });
+    
+    if (success) {
       // Get sender name for the toast
       let senderName = senderEmail;
       for (const [sId, u] of onlineUsers.entries()) {
@@ -354,6 +358,8 @@ io.on('connection', (socket) => {
           targetSocketIds.push(sId);
         }
       }
+      io.emit('chat_message', { sender: 'System', text: `Debug [notify target]: found ${targetSocketIds.length} sockets` });
+      
       for (const sId of targetSocketIds) {
         io.to(sId).emit('friend_request_received', { senderEmail, senderName });
         io.to(sId).emit('friends_list_data', db.getFriendsList(targetEmail));
@@ -367,6 +373,7 @@ io.on('connection', (socket) => {
           senderSocketIds.push(sId);
         }
       }
+      io.emit('chat_message', { sender: 'System', text: `Debug [notify sender]: found ${senderSocketIds.length} sockets` });
       for (const sId of senderSocketIds) {
         io.to(sId).emit('friends_list_data', db.getFriendsList(senderEmail));
       }

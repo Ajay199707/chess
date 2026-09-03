@@ -312,20 +312,22 @@ export function sendFriendRequest(senderEmail, targetEmail) {
   const sender = senderEmail.toLowerCase();
   const target = targetEmail.toLowerCase();
   
-  if (!db.users[sender] || !db.users[target]) return false;
-  if (sender === target) return false;
+  if (!db.users[sender]) { console.error("Sender not found:", sender); return false; }
+  if (!db.users[target]) { console.error("Target not found:", target); return false; }
+  if (sender === target) { console.error("Sender matches target:", sender); return false; }
   
   if (!db.users[target].friendRequests) db.users[target].friendRequests = [];
   if (!db.users[sender].sentRequests) db.users[sender].sentRequests = [];
   if (!db.users[target].friends) db.users[target].friends = [];
   
-  if (db.users[target].friends.includes(sender)) return false;
-  if (db.users[target].friendRequests.includes(sender)) return false;
+  if (db.users[target].friends.includes(sender)) { console.error("Already friends"); return false; }
+  if (db.users[target].friendRequests.includes(sender)) { console.error("Request already sent to target"); return false; }
   
   db.users[target].friendRequests.push(sender);
   if (!db.users[sender].sentRequests.includes(target)) {
     db.users[sender].sentRequests.push(target);
   }
+  
   saveDb(db);
   return true;
 }
