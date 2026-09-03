@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 
 import { Chessboard } from './components/Chessboard';
+import { OfficeModePiP } from './components/OfficeModePiP';
 import { ChatPanel } from './components/ChatPanel';
 import { GlobalChatPanel } from './components/GlobalChatPanel';
 import { Guidelines } from './components/Guidelines';
@@ -21,6 +22,9 @@ import { FeedbackModal } from './components/FeedbackModal';
 import './index.css';
 import { getBestMove } from './utils/chessAI';
 import { playSound } from './utils/audio';
+
+const ConditionalWrapper = ({ condition, wrapper, children }) => 
+  condition ? wrapper(children) : children;
 
 // Safe localStorage wrapper to prevent crashes in private modes or headless crawlers (Lighthouse/PageSpeed)
 const safeGetItem = (key, defaultValue) => {
@@ -69,6 +73,7 @@ export default function App() {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [activeMatches, setActiveMatches] = useState([]);
   const [activeChallengeRequest, setActiveChallengeRequest] = useState(null); // { challengerName, challengerEmail, timeControl, challengeId }
+  const [isOfficeMode, setIsOfficeMode] = useState(false);
   const userToken = safeGetItem('chess_user_token', null);
   const userEmail = safeGetItem('chess_user_email', null);
 
@@ -1698,6 +1703,15 @@ export default function App() {
               </div>
 
               <div className="utility-controls">
+                <button 
+                  className="btn-primary" 
+                  onClick={() => setIsOfficeMode(true)}
+                  title="Office Mode (Stealth)"
+                  aria-label="Office Mode"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#3b82f6' }}
+                >
+                  💼 Office Mode
+                </button>
                 <select 
                   value={boardTheme} 
                   onChange={(e) => setBoardTheme(e.target.value)}
@@ -1871,8 +1885,18 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <>
-                  {renderTurnBanner()}
+                <ConditionalWrapper 
+                  condition={isOfficeMode} 
+                  wrapper={children => (
+                    <OfficeModePiP onClose={() => setIsOfficeMode(false)}>
+                      <div className="office-pip-container" style={{background: 'var(--bg-app)', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column'}}>
+                        {children}
+                      </div>
+                    </OfficeModePiP>
+                  )}
+                >
+                  <>
+                    {renderTurnBanner()}
 
                   {/* Opponent Card (Top) */}
                   <div className={`player-card opponent ${activeTurn !== (playerColor === 'white' ? 'w' : 'b') && gameStatus === 'playing' ? 'active-turn' : ''}`}>
@@ -2045,6 +2069,7 @@ export default function App() {
                     )}
                   </div>
                 </>
+                </ConditionalWrapper>
               )}
             </div>
 
