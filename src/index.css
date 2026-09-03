@@ -2198,6 +2198,37 @@ body {
 }
 /* --- VIEWPORT RESPONSIVE OVERRIDES --- */
 @media (min-width: 769px) {
+  body, #root, .app-root {
+    height: 100vh;
+    overflow: hidden;
+  }
+  .gameplay-grid {
+    height: 100vh;
+    padding: 1.5rem;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  .left-column,
+  .right-column,
+  .board-column {
+    overflow-y: auto;
+    max-height: 100%;
+    /* Hide scrollbar visually but keep functionality for a cleaner look */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+  }
+  .left-column::-webkit-scrollbar,
+  .right-column::-webkit-scrollbar,
+  .board-column::-webkit-scrollbar {
+    width: 6px;
+  }
+  .left-column::-webkit-scrollbar-thumb,
+  .right-column::-webkit-scrollbar-thumb,
+  .board-column::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+  }
+  
   .left-column {
     grid-column: 1;
     grid-row: 2;
