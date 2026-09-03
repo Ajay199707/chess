@@ -10,6 +10,7 @@ import {
 
 import { Chessboard } from './components/Chessboard';
 import { OfficeModePiP } from './components/OfficeModePiP';
+import { CamouflageScreen } from './components/CamouflageScreen';
 import { ChatPanel } from './components/ChatPanel';
 import { GlobalChatPanel } from './components/GlobalChatPanel';
 import { Guidelines } from './components/Guidelines';
@@ -74,6 +75,53 @@ export default function App() {
   const [activeMatches, setActiveMatches] = useState([]);
   const [activeChallengeRequest, setActiveChallengeRequest] = useState(null); // { challengerName, challengerEmail, timeControl, challengeId }
   const [isOfficeMode, setIsOfficeMode] = useState(false);
+  const [isCamouflaged, setIsCamouflaged] = useState(false);
+  const isCamouflagedRef = useRef(false);
+  
+  useEffect(() => {
+    isCamouflagedRef.current = isCamouflaged;
+    
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+
+    if (isCamouflaged) {
+      document.title = "Untitled spreadsheet - Google Sheets";
+      link.href = "https://ssl.gstatic.com/docs/spreadsheets/favicon3.ico";
+    } else {
+      document.title = "Apex Chess";
+      link.href = "/chess_game/vite.svg";
+    }
+  }, [isCamouflaged]);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      // Alt + C: Toggle Camouflage Mode
+      if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        setIsCamouflaged(prev => !prev);
+      }
+      
+      // Alt + O: Enter Office Mode (PiP) + Camouflage Main Tab
+      if (e.altKey && (e.key === 'o' || e.key === 'O')) {
+        e.preventDefault();
+        setIsOfficeMode(true);
+        setIsCamouflaged(true);
+      }
+
+      // Esc: Exit Camouflage Mode
+      if (e.key === 'Escape') {
+        setIsCamouflaged(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
   const userToken = safeGetItem('chess_user_token', null);
   const userEmail = safeGetItem('chess_user_email', null);
 
@@ -340,6 +388,7 @@ export default function App() {
 
   // Sound triggering safely
   const triggerSound = (type) => {
+    if (isCamouflagedRef.current) return;
     if (soundEnabled) {
       playSound(type);
     }
@@ -1319,6 +1368,10 @@ export default function App() {
   };
 
   // --- RENDER FUNCTIONS ---
+  if (isCamouflaged) {
+    return <CamouflageScreen />;
+  }
+
   if (!isAuthenticated) {
     return (
       <div className={`app-root theme-${boardTheme} ${isDarkMode ? 'mode-dark' : 'mode-light'}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
