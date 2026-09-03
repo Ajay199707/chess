@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, History } from 'lucide-react';
+import { Trophy, History, Coffee } from 'lucide-react';
 
 export const ProfilePanel = ({ stats, matchHistory, onResetStats, onViewReplay, userProfile }) => {
   return (
@@ -101,6 +101,33 @@ export const ProfilePanel = ({ stats, matchHistory, onResetStats, onViewReplay, 
       >
         Reset Statistics
       </button>
+
+      <a 
+        href="https://buymeacoffee.com/braisonajg" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          background: '#FFDD00',
+          color: '#000000',
+          padding: '10px 14px',
+          borderRadius: '8px',
+          textDecoration: 'none',
+          fontWeight: 'bold',
+          fontSize: '0.9rem',
+          boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+          marginTop: '1rem',
+          transition: 'transform 0.2s ease, opacity 0.2s ease'
+        }}
+        onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
+        onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+      >
+        <Coffee size={18} color="#000000" />
+        Support the Developer
+      </a>
     </div>
   );
 };

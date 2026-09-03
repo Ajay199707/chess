@@ -1480,7 +1480,33 @@ export default function App() {
               <header className="menu-header" style={{ position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h1>♟️ Apex Chess</h1>
-                  <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <a 
+                      href="https://buymeacoffee.com/braisonajg" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: '#FFDD00',
+                        color: '#000000',
+                        padding: '6px 14px',
+                        borderRadius: '20px',
+                        textDecoration: 'none',
+                        fontWeight: 'bold',
+                        fontSize: '0.85rem',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                        transition: 'transform 0.2s ease'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                      <Coffee size={16} color="#000000" />
+                      Buy me a coffee
+                    </a>
+                    
+                    <div style={{ position: 'relative' }}>
                     <button 
                       className="icon-only-btn" 
                       onClick={() => setShowNotifications(!showNotifications)}
@@ -1519,6 +1545,7 @@ export default function App() {
                         </div>
                       </div>
                     )}
+                  </div>
                   </div>
                 </div>
                 <p className="welcome-greeting">👋 Welcome, {userProfile?.name}! Let's build our strategic mind!</p>
