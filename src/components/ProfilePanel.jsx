@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trophy, History, Heart } from 'lucide-react';
 
-export const ProfilePanel = ({ stats, matchHistory, onResetStats, onViewReplay, userProfile, onShowUpi }) => {
+export const ProfilePanel = ({ stats, matchHistory, onResetStats, onViewReplay, userProfile, }) => {
   return (
     <div className="stats-panel profile-panel">
       <div className="panel-header">
@@ -100,32 +100,6 @@ export const ProfilePanel = ({ stats, matchHistory, onResetStats, onViewReplay, 
         style={{ marginTop: '0.5rem' }}
       >
         Reset Statistics
-      </button>
-
-      <button 
-        onClick={onShowUpi}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          background: 'linear-gradient(135deg, #FF9933 0%, #FFFFFF 50%, #138808 100%)',
-          color: '#000000',
-          padding: '10px 14px',
-          borderRadius: '8px',
-          border: 'none',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          fontSize: '0.9rem',
-          boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-          marginTop: '1rem',
-          transition: 'transform 0.2s ease, opacity 0.2s ease'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
-        onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
-      >
-        <Heart size={18} color="#d946ef" fill="#d946ef" />
-        Support via UPI
       </button>
     </div>
   );

@@ -20,7 +20,7 @@ import { ReplayViewerModal } from './components/ReplayViewerModal';
 import { PublicProfileModal } from './components/PublicProfileModal';
 import { LoginScreen } from './components/LoginScreen';
 import { FeedbackModal } from './components/FeedbackModal';
-import { UpiModal } from './components/UpiModal';
+
 import './index.css';
 import { getBestMove } from './utils/chessAI';
 import { playSound } from './utils/audio';
@@ -179,7 +179,7 @@ export default function App() {
   const [publicProfileData, setPublicProfileData] = useState(null);
   const [friendsData, setFriendsData] = useState({ friends: [], friendRequests: [] });
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showUpiModal, setShowUpiModal] = useState(false);
+  
 
   // References
   const botTimeoutRef = useRef(null);
@@ -1483,29 +1483,6 @@ export default function App() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h1>♟️ Apex Chess</h1>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <button 
-                      onClick={() => setShowUpiModal(true)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: 'linear-gradient(135deg, #FF9933 0%, #FFFFFF 50%, #138808 100%)',
-                        color: '#000000',
-                        padding: '6px 14px',
-                        borderRadius: '20px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '0.85rem',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                        transition: 'transform 0.2s ease'
-                      }}
-                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                    >
-                      <Heart size={16} color="#d946ef" fill="#d946ef" />
-                      Support via UPI
-                    </button>
                     
                     <div style={{ position: 'relative' }}>
                     <button 
@@ -2163,7 +2140,7 @@ export default function App() {
                   userProfile={userProfile}
                   matchHistory={matchHistory}
                   onViewReplay={(match) => setViewingMatch(match)}
-                  onShowUpi={() => setShowUpiModal(true)}
+                  
                   onResetStats={() => {
                     if (window.confirm("Reset all statistics?")) {
                       setStats(DEFAULT_STATS);
@@ -2413,7 +2390,7 @@ export default function App() {
         />
       )}
 
-      <UpiModal isOpen={showUpiModal} onClose={() => setShowUpiModal(false)} />
+      
     </div>
   );
 }
