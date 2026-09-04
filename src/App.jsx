@@ -1761,15 +1761,6 @@ export default function App() {
               </div>
 
               <div className="utility-controls">
-                <button 
-                  className="btn-primary" 
-                  onClick={() => setIsOfficeMode(true)}
-                  title="Office Mode (Stealth)"
-                  aria-label="Office Mode"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#3b82f6' }}
-                >
-                  💼 Office Mode
-                </button>
                 <select 
                   value={boardTheme} 
                   onChange={(e) => setBoardTheme(e.target.value)}
