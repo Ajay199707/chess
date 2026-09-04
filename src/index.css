@@ -234,7 +234,7 @@ body {
   justify-content: center;
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 0 auto 8px auto !important;
   padding: 1.5rem;
   min-height: 100vh;
   min-height: 100svh;
@@ -568,7 +568,7 @@ body {
   width: 100%;
   min-height: calc(100vh - 3rem);
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 0 auto 8px auto !important;
 }
 
 .left-column,
@@ -1764,7 +1764,7 @@ body {
   .control-actions-panel {
     grid-template-columns: repeat(4, 1fr);
     width: min(94vw, 94vh, 400px);
-    margin: 0 auto;
+    margin: 0 auto 8px auto !important;
   }
   
   .action-tile {
@@ -1776,13 +1776,13 @@ body {
   .chat-panel {
     height: 250px;
     width: min(94vw, 94vh, 400px);
-    margin: 0 auto;
+    margin: 0 auto 8px auto !important;
   }
   
   .moves-log-panel {
     width: min(94vw, 94vh, 400px);
     height: calc(min(94vw, 94vh, 400px) + 90px);
-    margin: 0 auto;
+    margin: 0 auto 8px auto !important;
     background: transparent;
     border: none;
     box-shadow: none;
@@ -1791,7 +1791,7 @@ body {
   .stats-panel {
     width: min(94vw, 94vh, 400px);
     height: calc(min(94vw, 94vh, 400px) + 90px);
-    margin: 0 auto;
+    margin: 0 auto 8px auto !important;
     padding: 1rem;
     overflow-y: auto;
     background: transparent;
@@ -2630,7 +2630,7 @@ body.mode-light .captured-badge-count {
   width: 100%;
   max-width: 1000px;
   box-sizing: border-box;
-  margin: 0 auto;
+  margin: 0 auto 8px auto !important;
 }
 
 @media (min-width: 1025px) {
@@ -3207,4 +3207,30 @@ body.mode-light .next-match-notification-bubble {
 /* Piece Animation */
 .piece.animate-move { animation: slideMove 0.15s ease-out forwards; }
 @keyframes slideMove { 0% { transform: translate(var(--dx, 0), var(--dy, 0)); } 100% { transform: translate(0, 0); } }
+
+
+/* Office Mode PiP Responsive Resizing */
+.in-pip-mode .office-pip-container {
+  overflow: hidden !important;
+  padding: 8px;
+  justify-content: center;
+}
+
+.in-pip-mode .chessboard-wrapper-container {
+  justify-content: center;
+  align-items: center;
+}
+
+.in-pip-mode .chessboard {
+  width: 100%;
+  max-width: min(100vw - 50px, 100vh - 190px);
+  aspect-ratio: 1 / 1;
+  height: auto;
+}
+
+.in-pip-mode .player-card {
+  width: 100%;
+  max-width: min(100vw - 50px, 100vh - 190px);
+  margin: 0 auto 8px auto !important;
+}
 
