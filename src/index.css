@@ -35,7 +35,7 @@
   --sq-light: #F0D9B5;
   --sq-dark: #B58863;
   --sq-highlight: rgba(212, 175, 55, 0.4);
-  --sq-last-move: rgba(144, 205, 244, 0.4);
+  --sq-last-move: rgba(255, 255, 0, 0.4);
   --sq-check: rgba(239, 68, 68, 0.6);
 }
 
@@ -802,18 +802,19 @@ body {
 
 .move-indicator {
   position: absolute;
-  width: 25%;
-  height: 25%;
-  background: rgba(0, 0, 0, 0.2);
+  width: 32%;
+  height: 32%;
+  background: rgba(0, 0, 0, 0.4);
   border-radius: 50%;
   pointer-events: none;
 }
 
 .move-indicator.capture {
-  width: 75%;
-  height: 75%;
+  width: 85%;
+  height: 85%;
   background: transparent;
-  border: 3px solid rgba(0, 0, 0, 0.2);
+  border: 5px solid rgba(0, 0, 0, 0.4);
+  right: auto;
 }
 
 /* Coordinates labels */
@@ -3202,3 +3203,8 @@ body.mode-light .next-match-notification-bubble {
   }
 }
 .player-action { flex-shrink: 0; }
+
+/* Piece Animation */
+.piece.animate-move { animation: slideMove 0.15s ease-out forwards; }
+@keyframes slideMove { 0% { transform: translate(var(--dx, 0), var(--dy, 0)); } 100% { transform: translate(0, 0); } }
+

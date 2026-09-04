@@ -16,6 +16,7 @@ export const Chessboard = ({
   const [selectedSquare, setSelectedSquare] = useState(null);
   const [possibleMoves, setPossibleMoves] = useState([]);
   const [promotionPending, setPromotionPending] = useState(null); // { from, to }
+  const [animatingMove, setAnimatingMove] = useState(null);
 
   // Flip board if player is black
   const isFlipped = playerColor === 'black';
@@ -35,6 +36,12 @@ export const Chessboard = ({
     setPossibleMoves([]);
     setPromotionPending(null);
   }, [game]);
+
+  useEffect(() => {
+    if (lastMove) {
+      setAnimatingMove({ ...lastMove, id: Date.now() });
+    }
+  }, [lastMove]);
 
   const getSquareName = (file, rank) => `${file}${rank}`;
 
@@ -279,15 +286,23 @@ export const Chessboard = ({
                 style={{ position: 'relative' }}
               >
                 {/* Piece Rendering */}
-                {piece && (
-                  <div
-                    className={`piece ${normalizedPlayerColor && piece.color !== game.turn() ? 'inert' : 'draggable'}`}
-                    draggable={interactive && (!normalizedPlayerColor || piece.color === normalizedPlayerColor)}
-                    onDragStart={(e) => handleDragStart(e, squareName)}
-                  >
-                    <ChessPieceSVG type={piece.type} color={piece.color} />
-                  </div>
-                )}
+                {piece && (() => {
+                  const isAnimating = animatingMove && squareName === animatingMove.to && !isPremoveDest;
+                  const dx = isAnimating ? (displayFiles.indexOf(animatingMove.from[0]) - displayFiles.indexOf(animatingMove.to[0])) * 100 : 0;
+                  const dy = isAnimating ? (displayRanks.indexOf(parseInt(animatingMove.from[1])) - displayRanks.indexOf(parseInt(animatingMove.to[1]))) * 100 : 0;
+                  
+                  return (
+                    <div
+                      key={isAnimating ? `anim-${animatingMove.id}` : `static-${piece.type}-${piece.color}`}
+                      className={`piece ${normalizedPlayerColor && piece.color !== game.turn() ? 'inert' : 'draggable'} ${isAnimating ? 'animate-move' : ''}`}
+                      draggable={interactive && (!normalizedPlayerColor || piece.color === normalizedPlayerColor)}
+                      onDragStart={(e) => handleDragStart(e, squareName)}
+                      style={isAnimating ? { '--dx': `${dx}%`, '--dy': `${dy}%` } : {}}
+                    >
+                      <ChessPieceSVG type={piece.type} color={piece.color} />
+                    </div>
+                  );
+                })()}
 
                 {/* Possible move dot marker */}
                 {isPossibleDest && (
