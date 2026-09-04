@@ -17,6 +17,10 @@ export const Chessboard = ({
   const [possibleMoves, setPossibleMoves] = useState([]);
   const [promotionPending, setPromotionPending] = useState(null); // { from, to }
   const [animatingMove, setAnimatingMove] = useState(null);
+  const [customHighlights, setCustomHighlights] = useState(new Set());
+  const [arrows, setArrows] = useState([]);
+  const [drawStart, setDrawStart] = useState(null);
+  const [drawCurrent, setDrawCurrent] = useState(null);
 
   // Flip board if player is black
   const isFlipped = playerColor === 'black';
