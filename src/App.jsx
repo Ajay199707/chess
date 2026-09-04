@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 
 import { Chessboard } from './components/Chessboard';
+import { EvalBar } from './components/EvalBar';
+import { GameReviewModal } from './components/GameReviewModal';
 import { OfficeModePiP } from './components/OfficeModePiP';
 import { CamouflageScreen } from './components/CamouflageScreen';
 import { ChatPanel } from './components/ChatPanel';
@@ -176,6 +178,7 @@ export default function App() {
   const [premove, setPremove] = useState(null); // { from, to, promotion }
   const [matchHistory, setMatchHistory] = useState([]);
   const [viewingMatch, setViewingMatch] = useState(null);
+  const [showGameReview, setShowGameReview] = useState(false);
   const [publicProfileData, setPublicProfileData] = useState(null);
   const [friendsData, setFriendsData] = useState({ friends: [], friendRequests: [] });
   const [showNotifications, setShowNotifications] = useState(false);
@@ -1989,19 +1992,22 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* Interactive Chessboard */}
-                  <div className="chessboard-wrapper-container">
-                    <Chessboard
-                      game={game}
-                      onMove={gameMode === 'online-2p' ? handleOnlineMove : handleLocalMove}
-                      turn={activeTurn}
-                      playerColor={gameMode === 'online-2p' || gameMode === 'vs-bot' ? playerColor : null}
-                      boardTheme={boardTheme}
-                      interactive={gameStatus === 'playing' && !isSpectator}
-                      lastMove={lastMove}
-                      premove={premove}
-                      onPremove={handleSetPremove}
-                    />
+                  {/* Interactive Chessboard & EvalBar */}
+                  <div className="chessboard-wrapper-container" style={{ display: 'flex', flexDirection: 'row' }}>
+                    <EvalBar game={game} isFlipped={playerColor === 'black'} />
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      <Chessboard
+                        game={game}
+                        onMove={gameMode === 'online-2p' ? handleOnlineMove : handleLocalMove}
+                        turn={activeTurn}
+                        playerColor={gameMode === 'online-2p' || gameMode === 'vs-bot' ? playerColor : null}
+                        boardTheme={boardTheme}
+                        interactive={gameStatus === 'playing' && !isSpectator}
+                        lastMove={lastMove}
+                        premove={premove}
+                        onPremove={handleSetPremove}
+                      />
+                    </div>
 
                     {/* Floating Captured Pieces (Coins) Toggler */}
                     {gameStatus === 'playing' && showFloatingCaptures && (
@@ -2248,13 +2254,19 @@ export default function App() {
                         ELO: {userProfile.stats.elo} 
                         <span style={{ 
                           color: userProfile.stats.lastEloChange >= 0 ? 'var(--color-emerald)' : 'var(--color-danger)',
-                          marginLeft: '8px'
+                          marginLeft: '8px',
+                          fontSize: '1rem'
                         }}>
                           ({userProfile.stats.lastEloChange >= 0 ? '+' : ''}{userProfile.stats.lastEloChange})
                         </span>
                       </span>
                     </div>
                   )}
+
+                  <button className="btn-primary" style={{ marginBottom: '1rem' }} onClick={() => setShowGameReview(true)}>
+                    <Search size={18} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    Review Game
+                  </button>
 
                   {gameMode === 'online-2p' ? (
                     isSpectator ? (
@@ -2359,11 +2371,8 @@ export default function App() {
           profile={publicProfileData}
           onClose={() => setPublicProfileData(null)}
           onViewReplay={(match, profileEmail) => {
-             // We can open the replay viewer directly from here!
-             setViewingMatch({
-               ...match, 
-               userIsWhite: profileEmail.toLowerCase() === match.whiteEmail 
-             });
+            setPublicProfileData(null);
+            setViewingMatch({ ...match, whiteEmail: match.userIsWhite ? profileEmail : 'opponent' });
           }}
           socket={socket}
           currentUserEmail={userProfile?.email}
@@ -2371,6 +2380,7 @@ export default function App() {
         />
       )}
 
+      {showGameReview && (<GameReviewModal gameHistory={game} onClose={() => setShowGameReview(false)} initialTheme={boardTheme} />)}
       {viewingMatch && (
         <ReplayViewerModal 
           match={{

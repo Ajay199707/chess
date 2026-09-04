@@ -95,7 +95,7 @@ function getPiecePST(type, r, c, isWhite) {
 }
 
 // Evaluate full board state
-function evaluateBoard(chess) {
+export function evaluateBoard(chess) {
   let score = 0;
   const board = chess.board();
 
