@@ -3234,3 +3234,18 @@ body.mode-light .next-match-notification-bubble {
   margin: 0 auto 8px auto !important;
 }
 
+
+.square.custom-highlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(235, 97, 80, 0.6);
+}
+
+
+.active-time-travel {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+

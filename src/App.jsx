@@ -131,6 +131,8 @@ export default function App() {
   // --- GAME & LOGIC STATE ---
   const [game, setGame] = useState(() => new Chess());
   const [lastMove, setLastMove] = useState(null);
+  const [timeTravelIndex, setTimeTravelIndex] = useState(null);
+  useEffect(() => { setTimeTravelIndex(null); }, [game.history().length]);
   const [gameStatus, setGameStatus] = useState('waiting'); // 'waiting', 'playing', 'checkmate', 'draw', 'timeout', 'abandoned'
   const [winner, setWinner] = useState(null); // 'white', 'black', null (draw)
   
@@ -1336,7 +1338,8 @@ export default function App() {
     };
   })();
 
-  const activeTurn = game.turn();
+  const displayGame = React.useMemo(() => { if (timeTravelIndex === null) return game; const temp = new Chess(); const history = game.history(); for (let i = 0; i <= timeTravelIndex; i++) { if (history[i]) temp.move(history[i]); } return temp; }, [game, timeTravelIndex]);
+  const activeTurn = displayGame.turn();
 
 
 
@@ -1994,15 +1997,15 @@ export default function App() {
 
                   {/* Interactive Chessboard & EvalBar */}
                   <div className="chessboard-wrapper-container" style={{ display: 'flex', flexDirection: 'row' }}>
-                    <EvalBar game={game} isFlipped={playerColor === 'black'} />
+                    <EvalBar game={displayGame} isFlipped={playerColor === 'black'} />
                     <div style={{ flex: 1, position: 'relative' }}>
                       <Chessboard
-                        game={game}
+                        game={displayGame}
                         onMove={gameMode === 'online-2p' ? handleOnlineMove : handleLocalMove}
                         turn={activeTurn}
                         playerColor={gameMode === 'online-2p' || gameMode === 'vs-bot' ? playerColor : null}
                         boardTheme={boardTheme}
-                        interactive={gameStatus === 'playing' && !isSpectator}
+                        interactive={timeTravelIndex === null && gameStatus === 'playing' && !isSpectator}
                         lastMove={lastMove}
                         premove={premove}
                         onPremove={handleSetPremove}
@@ -2171,9 +2174,16 @@ export default function App() {
                 <div className="moves-log-panel">
                   <div className="panel-header">
                     <h3>📜 Move History</h3>
-                    <button className="btn-text-gold" onClick={exportPGN} disabled={game.history().length === 0}>
-                      Export PGN
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {timeTravelIndex !== null && (
+                        <button className="btn-sm-primary" onClick={() => setTimeTravelIndex(null)}>
+                          Jump to Present
+                        </button>
+                      )}
+                      <button className="btn-text-gold" onClick={exportPGN} disabled={game.history().length === 0}>
+                        Export PGN
+                      </button>
+                    </div>
                   </div>
                   <div className="moves-list-scroll">
                     {game.history().length === 0 ? (
@@ -2185,17 +2195,26 @@ export default function App() {
                             acc.push({
                               num: Math.floor(index / 2) + 1,
                               white: move.san,
-                              black: ''
+                              whiteIdx: index,
+                              black: '',
+                              blackIdx: null
                             });
                           } else {
                             acc[acc.length - 1].black = move.san;
+                            acc[acc.length - 1].blackIdx = index;
                           }
                           return acc;
                         }, []).map((row) => (
                           <div key={row.num} className="move-row">
                             <span className="move-index">{row.num}.</span>
-                            <span className="move-san w">{row.white}</span>
-                            <span className="move-san b">{row.black || '...'}</span>
+                            <span 
+                              className={`move-san w ${timeTravelIndex === row.whiteIdx ? 'active-time-travel' : ''}`}
+                              onClick={() => setTimeTravelIndex(row.whiteIdx)}
+                            >{row.white}</span>
+                            <span 
+                              className={`move-san b ${timeTravelIndex === row.blackIdx ? 'active-time-travel' : ''}`}
+                              onClick={() => row.blackIdx !== null && setTimeTravelIndex(row.blackIdx)}
+                            >{row.black || '...'}</span>
                           </div>
                         ))}
                       </div>
@@ -2395,3 +2414,4 @@ export default function App() {
     </div>
   );
 }
+

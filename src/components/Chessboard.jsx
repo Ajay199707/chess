@@ -231,6 +231,58 @@ export const Chessboard = ({
     }
   };
 
+  const getSquareCenter = (sq) => {
+    const fileIdx = displayFiles.indexOf(sq[0]);
+    const rankIdx = displayRanks.indexOf(parseInt(sq[1]));
+    return {
+      x: fileIdx * 12.5 + 6.25,
+      y: rankIdx * 12.5 + 6.25
+    };
+  };
+
+  const renderArrows = () => {
+    const allArrows = [...arrows];
+    if (drawStart && drawCurrent && drawStart !== drawCurrent) {
+      allArrows.push({ start: drawStart, end: drawCurrent, isTemp: true });
+    }
+    
+    if (allArrows.length === 0) return null;
+
+    return (
+      <svg className="arrows-overlay" viewBox="0 0 100 100" style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10}}>
+        <defs>
+          <marker id="arrowhead" markerWidth="4" markerHeight="4" refX="2.5" refY="2" orient="auto">
+            <polygon points="0 0, 4 2, 0 4" fill="rgba(235, 97, 80, 0.8)" />
+          </marker>
+        </defs>
+        {allArrows.map((arrow, idx) => {
+          const s = getSquareCenter(arrow.start);
+          const e = getSquareCenter(arrow.end);
+          const dx = e.x - s.x;
+          const dy = e.y - s.y;
+          const len = Math.sqrt(dx*dx + dy*dy);
+          const shorten = 3;
+          const ex = e.x - (dx/len)*shorten;
+          const ey = e.y - (dy/len)*shorten;
+          
+          return (
+            <line
+              key={idx}
+              x1={s.x}
+              y1={s.y}
+              x2={ex}
+              y2={ey}
+              stroke="rgba(235, 97, 80, 0.8)"
+              strokeWidth="1.8"
+              markerEnd="url(#arrowhead)"
+              opacity={arrow.isTemp ? 0.6 : 1}
+            />
+          );
+        })}
+      </svg>
+    );
+  };
+
   return (
     <div 
       className={`chessboard-wrapper theme-${boardTheme}`}
@@ -241,7 +293,8 @@ export const Chessboard = ({
         setPossibleMoves([]);
       }}
     >
-      <div className="chessboard">
+      <div className="chessboard" style={{ position: 'relative' }}>
+        {renderArrows()}
         {displayRanks.map((rank) =>
           displayFiles.map((file) => {
             const squareName = getSquareName(file, rank);
@@ -272,6 +325,7 @@ export const Chessboard = ({
             else squareClass += ' light';
 
             if (isSelected) squareClass += ' selected';
+            if (customHighlights.has(squareName)) squareClass += ' custom-highlight';
             if (isLastSource || isLastDest) squareClass += ' last-move';
             if (isKingInCheck) squareClass += ' king-check';
             if (isPremoveSource || isPremoveDest) squareClass += ' premove';
@@ -281,6 +335,10 @@ export const Chessboard = ({
                 key={squareName}
                 className={squareClass}
                 onClick={() => handleSquareClick(squareName)}
+                onMouseDown={(e) => handleSquareMouseDown(e, squareName)}
+                onMouseEnter={() => handleSquareMouseEnter(squareName)}
+                onMouseUp={(e) => handleSquareMouseUp(e, squareName)}
+                onContextMenu={(e) => e.preventDefault()}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, squareName)}
                 style={{ position: 'relative' }}
