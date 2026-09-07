@@ -3249,3 +3249,54 @@ body.mode-light .next-match-notification-bubble {
   padding: 0 4px;
 }
 
+/* Game Review Modal Responsive Layout */
+.game-review-modal {
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.game-review-board-panel {
+  flex: 1;
+  padding: 1rem;
+  background: #1e1c1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Prevent vertical overflow scrollbars on the board container if board shrinks */
+  overflow: hidden;
+}
+
+.game-review-list-panel {
+  width: 300px;
+  background: var(--bg-surface);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border-color);
+  max-height: 100%;
+}
+
+@media (max-width: 768px) {
+  .game-review-modal {
+    flex-direction: column;
+    max-height: 95vh;
+  }
+  
+  .game-review-board-panel {
+    padding: 0.5rem;
+    flex: none; /* Don't flex grow, just fit the board */
+  }
+  
+  .game-review-list-panel {
+    width: 100%;
+    flex: 1;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+  }
+}
