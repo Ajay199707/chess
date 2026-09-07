@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { io } from 'socket.io-client';
 import { 
-  Play, Users, Award, BookOpen, Volume2, VolumeX, 
+  Play, Users, Globe, Settings2, Share2, Volume2, VolumeX, 
   RotateCcw, Shield, HelpCircle, Trophy, Copy, Check,
   LogOut, ArrowLeftRight, Settings, Send, Sun, Moon, Coins,
-  MessageSquarePlus, X, Bell, BellOff, Coffee, IndianRupee, QrCode, Heart
+  MessageSquarePlus, X, Bell, BellOff, Coffee, IndianRupee, QrCode, Heart, Search
 } from 'lucide-react';
 
 import { Chessboard } from './components/Chessboard';
