@@ -2293,40 +2293,42 @@ export default function App() {
                     </div>
                   )}
 
-                  <button className="btn-primary" style={{ marginBottom: '1rem' }} onClick={() => setShowGameReview(true)}>
-                    <Search size={18} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Review Game
-                  </button>
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+                    <button className="btn-primary" onClick={() => setShowGameReview(true)}>
+                      <Search size={18} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                      Review Game
+                    </button>
 
-                  {gameMode === 'online-2p' ? (
-                    isSpectator ? (
-                      <p className="spectator-msg">Waiting for players to request rematch...</p>
-                    ) : restartOfferPending ? (
-                      <div className="rematch-proposal-box">
-                        <p className="rematch-proposal-text font-pulse">🤝 Opponent offered a Rematch!</p>
-                        <div className="btn-actions-row">
-                          <button className="btn-primary" onClick={() => handleRespondRestart(true)}>
-                            Accept
-                          </button>
-                          <button className="btn-danger" onClick={() => handleRespondRestart(false)}>
-                            Decline
-                          </button>
+                    {gameMode === 'online-2p' ? (
+                      isSpectator ? (
+                        <p className="spectator-msg">Waiting for players to request rematch...</p>
+                      ) : restartOfferPending ? (
+                        <div className="rematch-proposal-box">
+                          <p className="rematch-proposal-text font-pulse">🤝 Opponent offered a Rematch!</p>
+                          <div className="btn-actions-row">
+                            <button className="btn-primary" onClick={() => handleRespondRestart(true)}>
+                              Accept
+                            </button>
+                            <button className="btn-danger" onClick={() => handleRespondRestart(false)}>
+                              Decline
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ) : rematchRequestSent ? (
-                      <div className="rematch-status-box">
-                        <p className="rematch-status-text font-pulse">⏳ Waiting for opponent to accept...</p>
-                      </div>
+                      ) : rematchRequestSent ? (
+                        <div className="rematch-status-box">
+                          <p className="rematch-status-text font-pulse">⏳ Waiting for opponent to accept...</p>
+                        </div>
+                      ) : (
+                        <button className="btn-primary" onClick={handleOfferRestart}>
+                          <RotateCcw size={16} /> Request Rematch
+                        </button>
+                      )
                     ) : (
                       <button className="btn-primary" onClick={handleOfferRestart}>
-                        <RotateCcw size={16} /> Request Rematch
+                        <RotateCcw size={16} /> Play Again
                       </button>
-                    )
-                  ) : (
-                    <button className="btn-primary" onClick={handleOfferRestart}>
-                      <RotateCcw size={16} /> Play Again
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
 
