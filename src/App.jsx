@@ -1989,7 +1989,7 @@ export default function App() {
                       <div className="piece-chips">
                         {capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
                           <span key={idx} className="captured-piece-icon">
-                            <ChessPieceSVG type={p.type} color={p.color} size="16px" />
+                            <ChessPieceSVG type={p.type} color={p.color} size="16px" isUI={true} />
                           </span>
                         ))}
                       </div>
@@ -2071,8 +2071,8 @@ export default function App() {
                                   <span className="empty-label">None captured yet</span>
                                 ) : (
                                   capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
-                                    <span key={idx} className="captured-piece-chip" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' />`}>
-                                      <ChessPieceSVG type={p.type} color={p.color} size='18px' />
+                                    <span key={idx} className="captured-piece-chip" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} />`}>
+                                      <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} />
                                     </span>
                                   ))
                                 )}
@@ -2088,8 +2088,8 @@ export default function App() {
                                   <span className="empty-label">None captured yet</span>
                                 ) : (
                                   capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
-                                    <span key={idx} className="captured-piece-chip opponent" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' />`}>
-                                      <ChessPieceSVG type={p.type} color={p.color} size='18px' />
+                                    <span key={idx} className="captured-piece-chip opponent" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} />`}>
+                                      <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} />
                                     </span>
                                   ))
                                 )}
@@ -2121,7 +2121,7 @@ export default function App() {
                       <div className="piece-chips">
                         {capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
                           <span key={idx} className="captured-piece-icon">
-                            <ChessPieceSVG type={p.type} color={p.color} size='18px' />
+                            <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} />
                           </span>
                         ))}
                       </div>

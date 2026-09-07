@@ -6,7 +6,7 @@ const unicode = {
   bp: "♟", br: "♜", bn: "♞", bb: "♝", bq: "♛", bk: "♚"
 };
 
-export const ChessPieceSVG = ({ type, color, size = '100%' }) => {
+export const ChessPieceSVG = ({ type, color, size = '100%', isUI = false }) => {
   const key = `${color}${type.toLowerCase()}`;
   const char = unicode[key] || '';
   const isWhite = color === 'w';
@@ -26,9 +26,9 @@ export const ChessPieceSVG = ({ type, color, size = '100%' }) => {
         color: isWhite ? '#ffffff' : '#000000',
         textShadow: isWhite 
           ? '0 1px 2px rgba(0,0,0,0.6), 0 0 1px rgba(0,0,0,0.8)' 
-          : '0 0 2px rgba(255,255,255,0.8), 0 0 4px rgba(255,255,255,0.6)',
+          : (isUI ? '0 0 2px rgba(255,255,255,0.8), 0 0 4px rgba(255,255,255,0.6)' : '0 1px 1px rgba(255,255,255,0.2)'),
         cursor: 'pointer',
-        WebkitTextStroke: isWhite ? 'none' : '0.5px rgba(255,255,255,0.5)'
+        WebkitTextStroke: isWhite ? 'none' : (isUI ? '0.5px rgba(255,255,255,0.5)' : 'none')
       }}
     >
       {char}
