@@ -113,7 +113,6 @@ export default function App() {
       if (e.altKey && (e.key === 'o' || e.key === 'O')) {
         e.preventDefault();
         setIsOfficeMode(true);
-        setIsCamouflaged(true);
       }
 
       // Esc: Exit Camouflage Mode
