@@ -97,12 +97,14 @@ export const GameReviewModal = ({ gameHistory, onClose, initialTheme }) => {
 
   return (
     <div className="challenge-request-overlay" style={{ zIndex: 3000 }} onClick={onClose}>
-      <div className="challenge-card animate-scale-in" style={{ maxWidth: '800px', width: '90%', padding: 0, display: 'flex', flexDirection: 'row', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+      <div className="challenge-card animate-scale-in" style={{ maxWidth: '800px', width: '90%', maxHeight: '90vh', padding: 0, display: 'flex', flexDirection: 'row', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
         
         {/* Left: Board */}
-        <div style={{ flex: 1, padding: '1rem', background: '#1e1c1a' }}>
-          <div style={{ pointerEvents: 'none' }}>
-            <Chessboard game={reviewGame} boardTheme={initialTheme} interactive={false} />
+        <div style={{ flex: 1, padding: '1rem', background: '#1e1c1a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflowY: 'auto' }}>
+          <div style={{ pointerEvents: 'none', width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: '100%', maxWidth: '400px' }}>
+              <Chessboard game={reviewGame} boardTheme={initialTheme} interactive={false} />
+            </div>
           </div>
           
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
@@ -112,7 +114,7 @@ export const GameReviewModal = ({ gameHistory, onClose, initialTheme }) => {
         </div>
 
         {/* Right: Panel */}
-        <div style={{ width: '300px', background: 'var(--bg-surface)', padding: '1rem', display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--border-color)' }}>
+        <div style={{ width: '300px', background: 'var(--bg-surface)', padding: '1rem', display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--border-color)', maxHeight: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Search size={20} /> Game Review
