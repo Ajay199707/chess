@@ -18,13 +18,13 @@ export const ChessPieceSVG = ({ type, color, size = '100%' }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: '100%',
-        height: '100%',
-        fontSize: 'clamp(28px, 8vmin, 52px)',
+        width: size === '100%' ? '100%' : 'auto',
+        height: size === '100%' ? '100%' : 'auto',
+        fontSize: size === '100%' ? 'clamp(28px, 8vmin, 52px)' : size,
         lineHeight: 1,
         userSelect: 'none',
         color: isWhite ? '#ffffff' : '#111111',
-        textShadow: '1px 2px 2px rgba(0,0,0,0.45)',
+        textShadow: isWhite ? '0 1px 2px rgba(0,0,0,0.6), 0 0 1px rgba(0,0,0,0.8)' : '0 1px 1px rgba(255,255,255,0.4)',
         cursor: 'pointer'
       }}
     >
