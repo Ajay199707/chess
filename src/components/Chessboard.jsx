@@ -149,6 +149,47 @@ export const Chessboard = ({
     }
   };
 
+  // Arrow & Highlight Handlers
+  const handleSquareMouseDown = (e, square) => {
+    if (e.button === 2) {
+      setDrawStart(square);
+      setDrawCurrent(square);
+    } else if (e.button === 0) {
+      setCustomHighlights(new Set());
+      setArrows([]);
+    }
+  };
+
+  const handleSquareMouseEnter = (square) => {
+    if (drawStart) {
+      setDrawCurrent(square);
+    }
+  };
+
+  const handleSquareMouseUp = (e, square) => {
+    if (e.button === 2 && drawStart) {
+      if (drawStart === square) {
+        setCustomHighlights(prev => {
+          const next = new Set(prev);
+          if (next.has(square)) next.delete(square);
+          else next.add(square);
+          return next;
+        });
+      } else {
+        setArrows(prev => {
+          const existingIdx = prev.findIndex(a => a.start === drawStart && a.end === square);
+          if (existingIdx >= 0) {
+            return prev.filter((_, i) => i !== existingIdx);
+          } else {
+            return [...prev, { start: drawStart, end: square }];
+          }
+        });
+      }
+      setDrawStart(null);
+      setDrawCurrent(null);
+    }
+  };
+
   const executeMove = (from, to, promotion = 'q') => {
     onMove({ from, to, promotion });
     setSelectedSquare(null);
