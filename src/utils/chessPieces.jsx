@@ -23,9 +23,12 @@ export const ChessPieceSVG = ({ type, color, size = '100%' }) => {
         fontSize: size === '100%' ? 'clamp(28px, 8vmin, 52px)' : size,
         lineHeight: 1,
         userSelect: 'none',
-        color: isWhite ? '#ffffff' : '#111111',
-        textShadow: isWhite ? '0 1px 2px rgba(0,0,0,0.6), 0 0 1px rgba(0,0,0,0.8)' : '0 1px 1px rgba(255,255,255,0.4)',
-        cursor: 'pointer'
+        color: isWhite ? '#ffffff' : '#000000',
+        textShadow: isWhite 
+          ? '0 1px 2px rgba(0,0,0,0.6), 0 0 1px rgba(0,0,0,0.8)' 
+          : '0 0 2px rgba(255,255,255,0.8), 0 0 4px rgba(255,255,255,0.6)',
+        cursor: 'pointer',
+        WebkitTextStroke: isWhite ? 'none' : '0.5px rgba(255,255,255,0.5)'
       }}
     >
       {char}
