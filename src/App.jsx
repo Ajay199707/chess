@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 
 import { Chessboard } from './components/Chessboard';
+import { ChessPieceSVG } from './utils/chessPieces';
 import { EvalBar } from './components/EvalBar';
 import { GameReviewModal } from './components/GameReviewModal';
 import { OfficeModePiP } from './components/OfficeModePiP';
@@ -1989,7 +1990,7 @@ export default function App() {
                       <div className="piece-chips">
                         {capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
                           <span key={idx} className="captured-piece-icon">
-                            {p.type.toUpperCase()}
+                            <ChessPieceSVG type={p.type} color={p.color} size="16px" />
                           </span>
                         ))}
                       </div>
@@ -2071,8 +2072,8 @@ export default function App() {
                                   <span className="empty-label">None captured yet</span>
                                 ) : (
                                   capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
-                                    <span key={idx} className="captured-piece-chip" title={`${p.type.toUpperCase()}`}>
-                                      {p.type.toUpperCase()}
+                                    <span key={idx} className="captured-piece-chip" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' />`}>
+                                      <ChessPieceSVG type={p.type} color={p.color} size='18px' />
                                     </span>
                                   ))
                                 )}
@@ -2088,8 +2089,8 @@ export default function App() {
                                   <span className="empty-label">None captured yet</span>
                                 ) : (
                                   capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
-                                    <span key={idx} className="captured-piece-chip opponent" title={`${p.type.toUpperCase()}`}>
-                                      {p.type.toUpperCase()}
+                                    <span key={idx} className="captured-piece-chip opponent" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' />`}>
+                                      <ChessPieceSVG type={p.type} color={p.color} size='18px' />
                                     </span>
                                   ))
                                 )}
@@ -2121,7 +2122,7 @@ export default function App() {
                       <div className="piece-chips">
                         {capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
                           <span key={idx} className="captured-piece-icon">
-                            {p.type.toUpperCase()}
+                            <ChessPieceSVG type={p.type} color={p.color} size='18px' />
                           </span>
                         ))}
                       </div>

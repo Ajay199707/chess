@@ -920,17 +920,15 @@ body {
 }
 
 .captured-piece-icon {
-  background: var(--bg-app);
-  font-size: 0.6rem;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-color);
-  font-weight: 700;
-  color: var(--text-muted);
+  margin-left: -4px; /* Slight overlap */
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+}
+
+.captured-piece-icon:first-child {
+  margin-left: 0;
 }
 
 .lead-tag {
