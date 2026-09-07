@@ -142,8 +142,16 @@ export default function App() {
       const saved = safeGetItem('chess_player_stats', null);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.elo === undefined) parsed.elo = 1200;
-        return parsed;
+        return {
+          elo: parsed.elo ?? 1200,
+          vsBot: {
+            easy: { ...DEFAULT_STATS.vsBot.easy, ...(parsed.vsBot?.easy || {}) },
+            medium: { ...DEFAULT_STATS.vsBot.medium, ...(parsed.vsBot?.medium || {}) },
+            hard: { ...DEFAULT_STATS.vsBot.hard, ...(parsed.vsBot?.hard || {}) }
+          },
+          local: { ...DEFAULT_STATS.local, ...(parsed.local || {}) },
+          online: { ...DEFAULT_STATS.online, ...(parsed.online || {}) },
+        };
       }
       return DEFAULT_STATS;
     } catch {
@@ -669,6 +677,9 @@ export default function App() {
     setStats(prev => {
       const nextStats = JSON.parse(JSON.stringify(prev));
       if (nextStats.elo === undefined) nextStats.elo = 1200;
+      if (!nextStats.vsBot) nextStats.vsBot = { easy: { wins: 0, losses: 0, draws: 0 }, medium: { wins: 0, losses: 0, draws: 0 }, hard: { wins: 0, losses: 0, draws: 0 } };
+      if (!nextStats.local) nextStats.local = { p1Wins: 0, p2Wins: 0, draws: 0 };
+      if (!nextStats.online) nextStats.online = { wins: 0, losses: 0, draws: 0 };
       
       const currentElo = nextStats.elo;
       let eloChange = 0;
