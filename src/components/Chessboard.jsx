@@ -13,6 +13,7 @@ export const Chessboard = ({
   lastMove = null,
   premove = null,
   onPremove = null,
+  pieceStyle = 'staunton',
 }) => {
   const [selectedSquare, setSelectedSquare] = useState(null);
   const [possibleMoves, setPossibleMoves] = useState([]);

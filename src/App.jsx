@@ -2063,7 +2063,7 @@ export default function App() {
                                   <span className="empty-label">None captured yet</span>
                                 ) : (
                                   capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
-                                    <span key={idx} className="captured-piece-chip" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} style={pieceStyle} />`}>
+                                    <span key={idx} className="captured-piece-chip" title="Captured piece">
                                       <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} style={pieceStyle} />
                                     </span>
                                   ))
@@ -2080,7 +2080,7 @@ export default function App() {
                                   <span className="empty-label">None captured yet</span>
                                 ) : (
                                   capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
-                                    <span key={idx} className="captured-piece-chip opponent" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} style={pieceStyle} />`}>
+                                    <span key={idx} className="captured-piece-chip opponent" title="Captured piece">
                                       <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} style={pieceStyle} />
                                     </span>
                                   ))
