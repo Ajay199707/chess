@@ -14,8 +14,8 @@ const paths = {
 };
 
 const MinimalistPiece = ({ type, isWhite, width, height }) => (
-  <svg viewBox="0 0 45 45" style={{ width, height, cursor: 'pointer', filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.3))' }}>
-    <path d={paths[type]} fill={isWhite ? "#f8f9fa" : "#343a40"} stroke={isWhite ? "#dee2e6" : "#212529"} strokeWidth="2" strokeLinejoin="round" />
+  <svg viewBox="0 0 45 45" style={{ width, height, cursor: 'pointer', filter: isWhite ? 'drop-shadow(0px 2px 2px rgba(0,0,0,0.3))' : 'drop-shadow(0px 1px 3px rgba(255,255,255,0.3))' }}>
+    <path d={paths[type]} fill={isWhite ? "#f8f9fa" : "#343a40"} stroke={isWhite ? "#dee2e6" : "rgba(255,255,255,0.2)"} strokeWidth="2" strokeLinejoin="round" />
   </svg>
 );
 

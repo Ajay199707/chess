@@ -2407,7 +2407,7 @@ export default function App() {
       
       {/* Settings Modal */}
       {isSettingsOpen && (
-        <div className="modal-overlay" onClick={() => setIsSettingsOpen(false)}>
+        <div className="modal-backdrop" onClick={() => setIsSettingsOpen(false)}>
           <div className="modal-content glass-card" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2><Settings2 size={24} /> Settings & Themes</h2>
