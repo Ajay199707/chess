@@ -4,7 +4,7 @@ import { evaluateBoard, getBestMove } from '../utils/chessAI';
 import { X, Search, AlertTriangle, AlertCircle, Sparkles, MoveRight } from 'lucide-react';
 import { Chessboard } from './Chessboard'; // Assume we can re-use it visually
 
-export const GameReviewModal = ({ gameHistory, onClose, initialTheme }) => {
+export const GameReviewModal = ({ gameHistory, onClose, initialTheme, pieceStyle }) => {
   const [analyzing, setAnalyzing] = useState(true);
   const [analysis, setAnalysis] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
