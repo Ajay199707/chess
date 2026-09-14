@@ -12,7 +12,7 @@ function getAudioContext() {
   return audioCtx;
 }
 
-export const playSound = (type) => {
+export const playSound = (type, style = 'staunton') => {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -21,81 +21,109 @@ export const playSound = (type) => {
 
     switch (type) {
       case 'move': {
-        // Soft wood thud / click
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
 
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
-
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-
-        osc.start(now);
-        osc.stop(now + 0.1);
+        if (style === 'cyber') {
+          // Electronic Blip
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } else if (style === 'tokens') {
+          // Heavy Marble/Wood Knock
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.exponentialRampToValueAtTime(60, now + 0.08);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else {
+          // Standard soft thud
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        }
         break;
       }
 
       case 'capture': {
-        // Metallic friction click
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
 
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(120, now + 0.12);
-
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-
-        osc.start(now);
-        osc.stop(now + 0.12);
+        if (style === 'cyber') {
+          // Cyber Zap
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (style === 'tokens') {
+          // Heavy Marble/Wood Crack
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } else {
+          // Standard capture
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(120, now + 0.12);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        }
         break;
       }
 
       case 'check': {
-        // High double alert chime
         const playChime = (time, pitch) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.connect(gain);
           gain.connect(ctx.destination);
-
           osc.type = 'sine';
           osc.frequency.setValueAtTime(pitch, time);
           osc.frequency.exponentialRampToValueAtTime(pitch * 1.2, time + 0.15);
-
           gain.gain.setValueAtTime(0.15, time);
           gain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
-
           osc.start(time);
           osc.stop(time + 0.15);
         };
-
         playChime(now, 523.25); // C5
         playChime(now + 0.08, 659.25); // E5
         break;
       }
 
       case 'gameover': {
-        // Falling defeat or rising victory tones
         const notes = [261.63, 220.00, 196.00, 164.81]; // C4 -> A3 -> G3 -> E3
         notes.forEach((pitch, i) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.connect(gain);
           gain.connect(ctx.destination);
-
           osc.type = 'sine';
           osc.frequency.setValueAtTime(pitch, now + i * 0.12);
           gain.gain.setValueAtTime(0.2, now + i * 0.12);
           gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.15);
-
           osc.start(now + i * 0.12);
           osc.stop(now + i * 0.12 + 0.15);
         });
@@ -103,18 +131,15 @@ export const playSound = (type) => {
       }
 
       case 'gamestart': {
-        // High double drum/tone beat
         const playTone = (time, freq) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.connect(gain);
           gain.connect(ctx.destination);
-
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(freq, time);
           gain.gain.setValueAtTime(0.25, time);
           gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
-
           osc.start(time);
           osc.stop(time + 0.2);
         };

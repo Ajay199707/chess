@@ -103,7 +103,7 @@ export const GameReviewModal = ({ gameHistory, onClose, initialTheme }) => {
         <div className="game-review-board-panel">
           <div style={{ pointerEvents: 'none', width: '100%', display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: '100%', maxWidth: '450px' }}>
-              <Chessboard game={reviewGame} boardTheme={initialTheme} interactive={false} />
+              <Chessboard game={reviewGame} boardTheme={initialTheme} pieceStyle={pieceStyle} interactive={false} />
             </div>
           </div>
           

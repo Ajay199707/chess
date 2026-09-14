@@ -40,29 +40,13 @@
 }
 
 /* --- THEME VARIATIONS --- */
-.app-root.theme-classic {
-  --sq-light: #eedcbf;
-  --sq-dark: #966743;
-}
-
-.app-root.theme-slate {
-  --sq-light: #E2E8F0;
-  --sq-dark: #64748B;
-  --sq-highlight: rgba(16, 185, 129, 0.4);
-}
-
-.app-root.theme-gold {
-  --sq-light: #FFF8E7;
-  --sq-dark: #AD8C41; /* Lightened from #3A3525 to ensure black pieces are visible */
-  --sq-highlight: rgba(212, 175, 55, 0.45);
-}
-
-.app-root.theme-forest {
-  --sq-light: #ECECD7;
+.app-root.theme-emerald {
+  --sq-light: #ebecd0;
   --sq-dark: #739552;
+  --sq-highlight: rgba(255, 255, 51, 0.5);
+  --sq-last-move: rgba(255, 255, 51, 0.4);
 }
 
-/* 🪵 WALNUT WOOD THEME */
 .app-root.theme-wood {
   --bg-app: radial-gradient(circle at 50% 50%, #45240f 0%, #1e0e05 100%);
   --bg-surface: #2d170a;
@@ -71,75 +55,49 @@
   --text-main: #f5efe6;
   --text-muted: #c2a68f;
   --color-gold: #f0b86e;
-  --color-gold-hover: #d89d53;
   --sq-light: #eedcb2;
   --sq-dark: #824d27;
   --sq-highlight: rgba(240, 184, 110, 0.45);
 }
-
-.app-root.theme-wood .player-card,
-.app-root.theme-wood .menu-card,
-.app-root.theme-wood .online-lobby-panel,
-.app-root.theme-wood .stats-panel,
-.app-root.theme-wood .moves-log-panel,
-.app-root.theme-wood .chat-panel,
-.app-root.theme-wood .dialog-alert-card,
-.app-root.theme-wood .game-over-banner {
-  background: linear-gradient(145deg, #371d0e, #231107);
-  border: 2px solid #5a3016;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.05), var(--shadow-xl);
-}
-
 .app-root.theme-wood .square.light {
-  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 12px),
-                    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 12px), linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
 }
-
 .app-root.theme-wood .square.dark {
-  background-image: repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.04) 0px, rgba(0, 0, 0, 0.04) 2px, transparent 2px, transparent 10px),
-                    linear-gradient(135deg, rgba(0, 0, 0, 0.08) 0%, transparent 100%);
+  background-image: repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.04) 0px, rgba(0, 0, 0, 0.04) 2px, transparent 2px, transparent 10px), linear-gradient(135deg, rgba(0, 0, 0, 0.08) 0%, transparent 100%);
 }
 
-
-
-/* ⚙️ BRUSHED METAL THEME */
-.app-root.theme-metal {
-  --bg-app: radial-gradient(ellipse at center, #242729 0%, #0d0e0f 100%);
-  --bg-surface: #191b1c;
-  --bg-surface-elevated: #26292b;
-  --border-color: #3b3f42;
-  --text-main: #f1f5f9;
-  --text-muted: #94a3b8;
-  --color-gold: #c0c2c5;
-  --color-gold-hover: #a1a3a6;
-  --sq-light: #cfd2d6;
-  --sq-dark: #585d63;
-  --sq-highlight: rgba(192, 194, 197, 0.45);
+.app-root.theme-slate {
+  --sq-light: #E2E8F0;
+  --sq-dark: #64748B;
+  --sq-highlight: rgba(16, 185, 129, 0.4);
 }
 
-.app-root.theme-metal .player-card,
-.app-root.theme-metal .menu-card,
-.app-root.theme-metal .online-lobby-panel,
-.app-root.theme-metal .stats-panel,
-.app-root.theme-metal .moves-log-panel,
-.app-root.theme-metal .chat-panel,
-.app-root.theme-metal .dialog-alert-card,
-.app-root.theme-metal .game-over-banner {
-  background: linear-gradient(145deg, #222527, #131416);
-  border: 1px solid #484c50;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.08), 0 10px 25px rgba(0,0,0,0.5);
+.app-root.theme-cyberpunk {
+  --bg-app: radial-gradient(circle at 50% 50%, #1a0b2e 0%, #080312 100%);
+  --bg-surface: #10061e;
+  --bg-surface-elevated: #1e0b38;
+  --border-color: #ff0055;
+  --text-main: #00f3ff;
+  --text-muted: #b829e3;
+  --color-gold: #ff00e5;
+  --sq-light: #2d1b4e;
+  --sq-dark: #120524;
+  --sq-highlight: rgba(0, 243, 255, 0.5);
+  --sq-last-move: rgba(255, 0, 229, 0.4);
 }
-
-.app-root.theme-metal .square.light {
-  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 50%, transparent 50%),
-                    linear-gradient(transparent 50%, rgba(255, 255, 255, 0.03) 50%);
-  background-size: 4px 4px;
+.app-root.theme-cyberpunk .square {
+  border: 1px solid rgba(0, 243, 255, 0.1);
 }
-
-.app-root.theme-metal .square.dark {
-  background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.12) 50%, transparent 50%),
-                    linear-gradient(transparent 50%, rgba(0, 0, 0, 0.06) 50%);
-  background-size: 4px 4px;
+/* Cyberpunk specific dashboard highlights */
+.app-root.theme-cyberpunk .player-card,
+.app-root.theme-cyberpunk .menu-card,
+.app-root.theme-cyberpunk .online-lobby-panel,
+.app-root.theme-cyberpunk .stats-panel,
+.app-root.theme-cyberpunk .moves-log-panel,
+.app-root.theme-cyberpunk .chat-panel {
+  background: linear-gradient(145deg, rgba(30,11,56,0.9), rgba(16,6,30,0.9));
+  border: 1px solid #ff0055;
+  box-shadow: 0 0 15px rgba(255, 0, 85, 0.3), inset 0 0 10px rgba(0, 243, 255, 0.1);
 }
 
 /* --- GENERAL RESET & ROOT LAYOUT --- */

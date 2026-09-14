@@ -64,7 +64,8 @@ export default function App() {
   const [gameMode, setGameMode] = useState('menu'); // 'menu', 'vs-bot', 'local-2p', 'online-2p'
   const [difficulty, setDifficulty] = useState('medium'); // 'easy', 'medium', 'hard'
   const [botColor, setBotColor] = useState('black'); // 'white', 'black', 'random'
-  const [boardTheme, setBoardTheme] = useState(() => safeGetItem('chess_board_theme', 'classic'));
+  const [boardTheme, setBoardTheme] = useState(() => safeGetItem('chess_board_theme', 'emerald'));
+  const [pieceStyle, setPieceStyle] = useState(() => safeGetItem('chess_piece_style', 'staunton'));
   const [timeControl, setTimeControl] = useState('casual'); // 'casual', 'bullet', 'blitz3', 'blitz5', 'rapid10'
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(() => safeGetItem('chess_dark_mode', 'true') === 'true');
@@ -1612,19 +1613,14 @@ export default function App() {
 
                   <div className="time-setting">
                     <span>Time Control:</span>
-                    <select 
-                      value={timeControl} 
-                      onChange={(e) => setTimeControl(e.target.value)}
-                      className="select-dropdown"
-                      aria-label="Select match time control"
-                    >
-                      <option value="casual">Casual (No Timer)</option>
-                      <option value="bullet">Bullet (1 Min)</option>
-                      <option value="blitz3">Blitz (3 Min)</option>
-                      <option value="blitz5">Blitz (5 Min)</option>
-                      <option value="rapid10">Rapid (10 Min)</option>
-                      <option value="rapid30">Rapid (30 Min)</option>
-                    </select>
+                    <button 
+                  className="icon-only-btn" 
+                  onClick={() => setIsSettingsOpen(true)}
+                  title="Settings & Themes"
+                  aria-label="Settings"
+                >
+                  <Settings2 size={20} />
+                </button>
                   </div>
 
                   <div className="multiplayer-options">
@@ -1778,21 +1774,16 @@ export default function App() {
               </div>
 
               <div className="utility-controls">
-                <select 
-                  value={boardTheme} 
-                  onChange={(e) => setBoardTheme(e.target.value)}
-                  className="theme-select select-dropdown"
-                  aria-label="Select board theme"
-                >
-                  <option value="classic">Birch Wood</option>
-                  <option value="wood">Walnut Wood</option>
-                  <option value="metal">Brushed Metal</option>
-                  <option value="slate">Modern Slate</option>
-                  <option value="gold">Midnight Gold</option>
-                  <option value="forest">Forest Green</option>
-                </select>
 
                 <button 
+                  className="icon-only-btn" 
+                  onClick={() => setIsSettingsOpen(true)}
+                  title="Settings & Themes"
+                  aria-label="Settings"
+                >
+                  <Settings2 size={20} />
+                </button>
+<button 
                   className="icon-only-btn" 
                   onClick={() => setIsGuidelinesOpen(true)}
                   title="Rules & Guidelines"
@@ -1989,7 +1980,7 @@ export default function App() {
                       <div className="piece-chips">
                         {capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
                           <span key={idx} className="captured-piece-icon">
-                            <ChessPieceSVG type={p.type} color={p.color} size="16px" isUI={true} />
+                            <ChessPieceSVG type={p.type} color={p.color} size="16px" isUI={true} style={pieceStyle} />
                           </span>
                         ))}
                       </div>
@@ -2016,6 +2007,7 @@ export default function App() {
                         turn={activeTurn}
                         playerColor={gameMode === 'online-2p' || gameMode === 'vs-bot' ? playerColor : null}
                         boardTheme={boardTheme}
+                        pieceStyle={pieceStyle}
                         interactive={timeTravelIndex === null && gameStatus === 'playing' && !isSpectator}
                         lastMove={lastMove}
                         premove={premove}
@@ -2071,8 +2063,8 @@ export default function App() {
                                   <span className="empty-label">None captured yet</span>
                                 ) : (
                                   capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
-                                    <span key={idx} className="captured-piece-chip" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} />`}>
-                                      <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} />
+                                    <span key={idx} className="captured-piece-chip" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} style={pieceStyle} />`}>
+                                      <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} style={pieceStyle} />
                                     </span>
                                   ))
                                 )}
@@ -2088,8 +2080,8 @@ export default function App() {
                                   <span className="empty-label">None captured yet</span>
                                 ) : (
                                   capturedPieces[playerColor === 'black' ? 'w' : 'b'].map((p, idx) => (
-                                    <span key={idx} className="captured-piece-chip opponent" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} />`}>
-                                      <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} />
+                                    <span key={idx} className="captured-piece-chip opponent" title={`$<ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} style={pieceStyle} />`}>
+                                      <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} style={pieceStyle} />
                                     </span>
                                   ))
                                 )}
@@ -2121,7 +2113,7 @@ export default function App() {
                       <div className="piece-chips">
                         {capturedPieces[playerColor === 'black' ? 'b' : 'w'].map((p, idx) => (
                           <span key={idx} className="captured-piece-icon">
-                            <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} />
+                            <ChessPieceSVG type={p.type} color={p.color} size='18px' isUI={true} style={pieceStyle} />
                           </span>
                         ))}
                       </div>
@@ -2412,7 +2404,7 @@ export default function App() {
         />
       )}
 
-      {showGameReview && (<GameReviewModal gameHistory={game} onClose={() => setShowGameReview(false)} initialTheme={boardTheme} />)}
+      {showGameReview && (<GameReviewModal gameHistory={game} onClose={() => setShowGameReview(false)} initialTheme={boardTheme} pieceStyle={pieceStyle} />)}
       {viewingMatch && (
         <ReplayViewerModal 
           match={{

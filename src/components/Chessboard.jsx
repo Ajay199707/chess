@@ -3,6 +3,7 @@ import { Chess } from 'chess.js';
 import { ChessPieceSVG } from '../utils/chessPieces';
 
 export const Chessboard = ({
+
   game,
   onMove,
   turn,
@@ -402,7 +403,7 @@ export const Chessboard = ({
                       onDragStart={(e) => handleDragStart(e, squareName)}
                       style={isAnimating ? { '--dx': `${dx}%`, '--dy': `${dy}%` } : {}}
                     >
-                      <ChessPieceSVG type={piece.type} color={piece.color} />
+                      <ChessPieceSVG type={piece.type} color={piece.color} style={pieceStyle} />
                     </div>
                   );
                 })()}
@@ -442,7 +443,7 @@ export const Chessboard = ({
                     onClick={() => executeMove(promotionPending.from, promotionPending.to, option.key)}
                   >
                     <div className="promo-piece-wrapper">
-                      <ChessPieceSVG type={option.key} color={game.turn()} />
+                      <ChessPieceSVG type={option.key} color={game.turn()} style={pieceStyle} />
                     </div>
                     <span>{option.name}</span>
                   </button>
