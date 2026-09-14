@@ -86,10 +86,8 @@ export const ChessPieceSVG = ({ type, color, size = '100%', isUI = false, style 
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         width, height, fontSize, lineHeight: 1, userSelect: 'none', cursor: 'pointer',
         color: isWhite ? '#f8f9fa' : '#212529',
-        textShadow: isWhite 
-          ? '0 0 10px rgba(255,255,255,0.6), 0 4px 4px rgba(0,0,0,0.4)' 
-          : '0 0 8px rgba(0,0,0,0.8), 0 2px 2px rgba(255,255,255,0.2)',
-        WebkitTextStroke: isWhite ? '0.5px #adb5bd' : '0.5px #6c757d'
+        WebkitTextStroke: isWhite ? '0.5px #adb5bd' : '1px rgba(255,255,255,0.6)',
+        textShadow: isWhite ? '0 0 10px rgba(255,255,255,0.6)' : '0 0 8px rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.8)'
       }}>
         {char}
       </span>
@@ -102,8 +100,8 @@ export const ChessPieceSVG = ({ type, color, size = '100%', isUI = false, style 
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       width, height, fontSize, lineHeight: 1, userSelect: 'none', cursor: 'pointer',
       color: isWhite ? '#ffffff' : '#000000',
-      textShadow: isWhite ? '0 1px 2px rgba(0,0,0,0.6)' : (isUI ? '0 0 2px rgba(255,255,255,0.8)' : '0 1px 1px rgba(255,255,255,0.2)'),
-      WebkitTextStroke: isWhite ? '1px #000' : (isUI ? '0.5px rgba(255,255,255,0.5)' : 'none')
+      textShadow: isWhite ? '0 1px 2px rgba(0,0,0,0.6)' : '0 0 3px rgba(255,255,255,0.5)',
+      WebkitTextStroke: isWhite ? '1px #000' : '1px rgba(255,255,255,0.6)'
     }}>
       {char}
     </span>
