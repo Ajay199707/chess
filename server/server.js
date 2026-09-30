@@ -4,13 +4,12 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
 const { Chess } = require('chess.js');
 
 const app = express();
 const server = http.createServer(app);
 
-// CORS configuration (Fixes Vuln #5)
 const corsOptions = {
   origin: ['http://localhost:5173', 'https://ajay199707.github.io'],
   methods: ['GET', 'POST'],
@@ -19,15 +18,30 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cookieParser());
 
 const io = new Server(server, { cors: corsOptions });
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_replace_in_prod';
+const MONGO_URI = process.env.MONGO_URI;
 
-// --- IN-MEMORY DB ---
-const users = new Map(); 
+// --- MONGODB CONNECTION & SCHEMAS ---
+if (MONGO_URI) {
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log('✅ MongoDB Connected Successfully'))
+    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+} else {
+  console.log('⚠️ No MONGO_URI found. Starting without persistent database.');
+}
+
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  name: String,
+  passwordHash: String,
+  elo: { type: Number, default: 1200 }
+});
+const User = mongoose.model('User', userSchema);
+
+// --- IN-MEMORY STATE (for active fast-paced gameplay) ---
 const rooms = new Map(); 
-const feedbacks = [];
 const lobbies = new Set();
 // --------------------
 
@@ -36,43 +50,51 @@ io.on('connection', (socket) => {
 
   // --- Auth Handlers ---
   socket.on('register', async ({ name, email, password }) => {
-    if (!name || !email || !password) return socket.emit('auth_response', { success: false, message: 'Missing fields' });
-    if (users.has(email)) return socket.emit('auth_response', { success: false, message: 'Email already exists' });
-    
-    const passwordHash = await bcrypt.hash(password, 10); // Fixes Vuln #2
-    const newUser = { email, name, passwordHash, elo: 1200 };
-    users.set(email, newUser);
-    
-    socket.user = newUser; // Attach identity to socket (Fixes Vuln #1)
-    const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '7d' });
-    
-    socket.emit('auth_response', { 
-      success: true, 
-      name, email, stats: { elo: 1200 }, 
-      token 
-    });
+    try {
+      if (!name || !email || !password) return socket.emit('auth_response', { success: false, message: 'Missing fields' });
+      
+      const existingUser = await User.findOne({ email });
+      if (existingUser) return socket.emit('auth_response', { success: false, message: 'Email already exists' });
+      
+      const passwordHash = await bcrypt.hash(password, 10);
+      const newUser = await User.create({ email, name, passwordHash, elo: 1200 });
+      
+      socket.user = newUser; 
+      const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '7d' });
+      
+      socket.emit('auth_response', { 
+        success: true, 
+        name, email, stats: { elo: 1200 }, 
+        token 
+      });
+    } catch(err) {
+      socket.emit('auth_response', { success: false, message: 'Server error during registration' });
+    }
   });
 
   socket.on('login', async ({ email, password }) => {
-    const user = users.get(email);
-    if (!user) return socket.emit('auth_response', { success: false, message: 'Invalid credentials' });
-    
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) return socket.emit('auth_response', { success: false, message: 'Invalid credentials' });
-    
-    socket.user = user; // Attach identity to socket
-    const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '7d' });
-    
-    socket.emit('auth_response', { 
-      success: true, 
-      name: user.name, email: user.email, stats: { elo: user.elo }, 
-      token 
-    });
+    try {
+      const user = await User.findOne({ email });
+      if (!user) return socket.emit('auth_response', { success: false, message: 'Invalid credentials' });
+      
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (!valid) return socket.emit('auth_response', { success: false, message: 'Invalid credentials' });
+      
+      socket.user = user; 
+      const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '7d' });
+      
+      socket.emit('auth_response', { 
+        success: true, 
+        name: user.name, email: user.email, stats: { elo: user.elo }, 
+        token 
+      });
+    } catch(err) {
+      socket.emit('auth_response', { success: false, message: 'Server error during login' });
+    }
   });
 
-  socket.on('google_login', ({ credential }) => {
+  socket.on('google_login', async ({ credential }) => {
     try {
-      // Decode the Google JWT to extract user profile
       const decoded = jwt.decode(credential);
       if (!decoded || !decoded.email) {
         return socket.emit('auth_response', { success: false, message: 'Invalid Google token' });
@@ -81,14 +103,12 @@ io.on('connection', (socket) => {
       const email = decoded.email;
       const name = decoded.name || 'Google User';
       
-      // Auto-register or login
-      let user = users.get(email);
+      let user = await User.findOne({ email });
       if (!user) {
-        user = { email, name, passwordHash: 'GOOGLE_AUTH', elo: 1200 };
-        users.set(email, user);
+        user = await User.create({ email, name, passwordHash: 'GOOGLE_AUTH', elo: 1200 });
       }
       
-      socket.user = user; // Attach identity
+      socket.user = user;
       const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '7d' });
       
       socket.emit('auth_response', { 
@@ -103,23 +123,23 @@ io.on('connection', (socket) => {
     }
   });
 
-
-  // Verify session (for page reload)
-  socket.on('verify_session', ({ email, token }) => {
+  socket.on('verify_session', async ({ email, token }) => {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      if (decoded.email === email && users.has(email)) {
-        socket.user = users.get(email);
-        socket.emit('session_verified', { success: true });
-      } else {
-        socket.emit('session_verified', { success: false });
+      if (decoded.email === email) {
+        const user = await User.findOne({ email });
+        if (user) {
+          socket.user = user;
+          return socket.emit('session_verified', { success: true });
+        }
       }
+      socket.emit('session_verified', { success: false });
     } catch(e) {
       socket.emit('session_verified', { success: false });
     }
   });
 
-  // --- Protected Endpoints (Only work if socket.user exists) ---
+  // --- Protected Endpoints ---
   socket.use((packet, next) => {
     const publicEvents = ['register', 'login', 'google_login', 'verify_session', 'disconnect'];
     if (publicEvents.includes(packet[0])) return next();
@@ -157,8 +177,8 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('make_move', (data) => {
-    const { roomCode, move } = data; // ignores fen/history from client
+  socket.on('make_move', async (data) => {
+    const { roomCode, move } = data;
     const room = rooms.get(roomCode);
     if (!room || room.status !== 'playing') return;
 
@@ -181,6 +201,13 @@ io.on('connection', (socket) => {
           let winner = null;
           if (room.chess.isCheckmate()) {
             winner = room.chess.turn() === 'w' ? 'b' : 'w';
+            
+            // Basic ELO adjustment logic (winner +25, loser -25)
+            const winnerEmail = room.players[winner];
+            const loserEmail = room.players[winner === 'w' ? 'b' : 'w'];
+            
+            await User.updateOne({ email: winnerEmail }, { $inc: { elo: 25 } });
+            await User.updateOne({ email: loserEmail }, { $inc: { elo: -25 } });
           }
           io.to(roomCode).emit('game_over', { reason: 'checkmate', winner });
         }
