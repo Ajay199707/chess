@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Apex Chess</string>
+    <string name="title_activity_main">Apex Chess</string>
+    <string name="package_name">com.apexchess.app</string>
+    <string name="custom_url_scheme">com.apexchess.app</string>
+</resources>

@@ -14,6 +14,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.2",
     "@react-oauth/google": "^0.13.5",
     "chess.js": "^1.4.0",
     "express": "^5.2.1",
@@ -26,6 +27,8 @@
     "stockfish.js": "^10.0.2"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
