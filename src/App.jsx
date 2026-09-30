@@ -421,7 +421,7 @@ export default function App() {
 
   // --- PERSISTENT SOCKET CONNECTION & AUTHENTICATION EFFECT ---
   useEffect(() => {
-    const BACKEND_PROD_URL = "https://chess-smdm.onrender.com"; 
+    const BACKEND_PROD_URL = "https://chess-1-fj9o.onrender.com"; // TODO: Update to your own Render URL before going to prod 
     const isDev = window.location.port && window.location.port !== '3001';
     const socketUrl = isDev 
       ? `${window.location.protocol}//${window.location.hostname}:3001` 
