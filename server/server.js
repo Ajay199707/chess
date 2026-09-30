@@ -40,6 +40,20 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
+const matchSchema = new mongoose.Schema({
+  roomId: String,
+  whiteEmail: String,
+  whiteName: String,
+  blackEmail: String,
+  blackName: String,
+  result: String,
+  reason: String,
+  pgn: String,
+  createdAt: { type: Date, default: Date.now }
+});
+const Match = mongoose.model('Match', matchSchema);
+
+
 // --- IN-MEMORY STATE (for active fast-paced gameplay) ---
 const rooms = new Map(); 
 const lobbies = new Set();
@@ -158,6 +172,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  
+  socket.on('request_match_history', async () => {
+    try {
+      const email = socket.user.email;
+      const matches = await Match.find({
+        $or: [{ whiteEmail: email }, { blackEmail: email }]
+      }).sort({ createdAt: -1 }).limit(20);
+      socket.emit('match_history_data', matches);
+    } catch (e) {
+      console.error('Match history error', e);
+    }
+  });
+
   socket.on('enter_lobby', () => {
     const lobbyArr = Array.from(lobbies);
     const opponent = lobbyArr.find(s => s.id !== socket.id);
@@ -210,17 +237,47 @@ io.on('connection', (socket) => {
         if (room.chess.isGameOver()) {
           room.status = 'completed';
           let winner = null;
+          let result = 'draw';
+          let reason = 'draw';
+
           if (room.chess.isCheckmate()) {
             winner = room.chess.turn() === 'w' ? 'b' : 'w';
+            result = winner === 'w' ? 'white' : 'black';
+            reason = 'checkmate';
             
-            // Basic ELO adjustment logic (winner +25, loser -25)
             const winnerEmail = room.players[winner];
             const loserEmail = room.players[winner === 'w' ? 'b' : 'w'];
-            
             await User.updateOne({ email: winnerEmail }, { $inc: { elo: 25 } });
             await User.updateOne({ email: loserEmail }, { $inc: { elo: -25 } });
+          } else if (room.chess.isStalemate()) {
+            reason = 'stalemate';
+          } else if (room.chess.isThreefoldRepetition()) {
+            reason = 'repetition';
+          } else if (room.chess.isInsufficientMaterial()) {
+            reason = 'insufficient';
+          } else if (room.chess.isDraw()) {
+            reason = '50-move';
           }
-          io.to(roomCode).emit('game_over', { reason: 'checkmate', winner });
+
+          try {
+            const whiteUser = await User.findOne({ email: room.players.w });
+            const blackUser = await User.findOne({ email: room.players.b });
+
+            await Match.create({
+              roomId: roomCode,
+              whiteEmail: room.players.w,
+              whiteName: whiteUser ? whiteUser.name : 'Unknown',
+              blackEmail: room.players.b,
+              blackName: blackUser ? blackUser.name : 'Unknown',
+              result,
+              reason,
+              pgn: room.chess.pgn()
+            });
+          } catch(err) {
+            console.error('Failed to save match history', err);
+          }
+
+          io.to(roomCode).emit('game_over', { reason, winner });
         }
       }
     } catch (err) {
