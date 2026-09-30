@@ -121,7 +121,7 @@ io.on('connection', (socket) => {
 
   // --- Protected Endpoints (Only work if socket.user exists) ---
   socket.use((packet, next) => {
-    const publicEvents = ['register', 'login', 'verify_session', 'disconnect'];
+    const publicEvents = ['register', 'login', 'google_login', 'verify_session', 'disconnect'];
     if (publicEvents.includes(packet[0])) return next();
     if (!socket.user) return next(new Error('Unauthorized'));
     next();
