@@ -23,6 +23,7 @@ import { ReplayViewerModal } from './components/ReplayViewerModal';
 import { PublicProfileModal } from './components/PublicProfileModal';
 import { LoginScreen } from './components/LoginScreen';
 import { FeedbackModal } from './components/FeedbackModal';
+import { LeaderboardModal } from './components/LeaderboardModal';
 
 import './index.css';
 import { getBestMove } from './utils/chessAI';
@@ -192,6 +193,7 @@ export default function App() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [rematchRequestSent, setRematchRequestSent] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [nextMatchNotifications, setNextMatchNotifications] = useState([]); // [{ id, name, email }]
   const [premove, setPremove] = useState(null); // { from, to, promotion }
   const [matchHistory, setMatchHistory] = useState([]);
