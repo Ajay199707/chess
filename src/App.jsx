@@ -50,6 +50,13 @@ const safeSetItem = (key, value) => {
   }
 };
 
+
+
+const safeRemoveItem = (key) => {
+  try {
+    window.localStorage.removeItem(key);
+  } catch (e) {}
+};
 // Default stats layout
 const DEFAULT_STATS = {
   vsBot: { easy: { wins: 0, losses: 0, draws: 0 }, medium: { wins: 0, losses: 0, draws: 0 }, hard: { wins: 0, losses: 0, draws: 0 } },
@@ -2476,4 +2483,5 @@ export default function App() {
     </div>
   );
 }
+
 
