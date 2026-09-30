@@ -141,10 +141,21 @@ io.on('connection', (socket) => {
 
   // --- Protected Endpoints ---
   socket.use((packet, next) => {
-    const publicEvents = ['register', 'login', 'google_login', 'verify_session', 'disconnect'];
+    const publicEvents = ['register', 'login', 'google_login', 'verify_session', 'disconnect', 'request_leaderboard'];
     if (publicEvents.includes(packet[0])) return next();
     if (!socket.user) return next(new Error('Unauthorized'));
     next();
+  });
+
+  
+  socket.on('request_leaderboard', async () => {
+    try {
+      // Find top 10 players sorted by ELO descending
+      const topPlayers = await User.find({}, 'name elo').sort({ elo: -1 }).limit(10);
+      socket.emit('leaderboard_data', topPlayers);
+    } catch (e) {
+      console.error('Leaderboard error', e);
+    }
   });
 
   socket.on('enter_lobby', () => {
